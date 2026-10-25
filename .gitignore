@@ -39,3 +39,6 @@ coverage/
 
 # Prisma
 backend/prisma/*.db
+
+# Vercel
+.vercel

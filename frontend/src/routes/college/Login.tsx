@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   Building2,
   ShieldCheck,
@@ -8,7 +7,6 @@ import {
   Mail,
   Eye,
   EyeOff,
-  Globe,
   ArrowRight,
   Sparkles,
   HelpCircle,
@@ -28,7 +26,6 @@ import { PrototypeBanner } from '../../components/ui/PrototypeBanner';
 import toast from 'react-hot-toast';
 
 export default function Login() {
-  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -112,17 +109,6 @@ export default function Login() {
     }, 800);
   };
 
-  const toggleLanguage = () => {
-    const nextLang = i18n.language === 'en' ? 'hi' : 'en';
-    i18n.changeLanguage(nextLang);
-    toast.success(
-      nextLang === 'hi'
-        ? 'भाषा बदलकर हिन्दी कर दी गई है'
-        : 'Language switched to English',
-      { icon: '🌐' }
-    );
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-surface font-sans selection:bg-blue-200 selection:text-slate-900">
       {/* Top Prototype Navigation Banner */}
@@ -152,14 +138,6 @@ export default function Login() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-navy-800 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition"
-          >
-            <Globe className="w-3.5 h-3.5 text-navy-700" />
-            <span>{i18n.language === 'en' ? 'हिन्दी' : 'English'}</span>
-          </button>
-
           <a
             href="#help"
             onClick={(e) => {

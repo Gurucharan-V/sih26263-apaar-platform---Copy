@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { 
   Bell, 
   LogOut, 
-  Globe, 
   User, 
   CheckCheck, 
   Building2, 
@@ -19,7 +18,7 @@ import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 export const Navbar: React.FC<{ portal: 'college' | 'admin' }> = ({ portal }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -84,17 +83,6 @@ export const Navbar: React.FC<{ portal: 'college' | 'admin' }> = ({ portal }) =>
     };
   }, []);
 
-  const toggleLang = () => {
-    const nextLang = i18n.language === 'en' ? 'hi' : 'en';
-    i18n.changeLanguage(nextLang);
-    toast.success(
-      nextLang === 'hi' 
-        ? 'भाषा बदलकर हिन्दी कर दी गई है' 
-        : 'Language switched to English',
-      { icon: '🌐' }
-    );
-  };
-
   const handleMarkAllRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
     toast.success(t('nav.markAllRead', 'All notifications marked as read'));
@@ -140,17 +128,7 @@ export const Navbar: React.FC<{ portal: 'college' | 'admin' }> = ({ portal }) =>
 
       {/* Right Action Icons & Controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* 1. Language Toggle Button */}
-        <button
-          onClick={toggleLang}
-          title={i18n.language === 'en' ? 'हिन्दी में बदलें (Switch to Hindi)' : 'Switch to English'}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-blue-700 bg-slate-50 hover:bg-blue-50/60 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-blue-300 transition active:scale-95 shadow-sm"
-        >
-          <Globe className="w-3.5 h-3.5 text-blue-600" />
-          <span>{i18n.language === 'en' ? 'हिन्दी' : 'English'}</span>
-        </button>
-
-        {/* 2. Notification Bell with Dropdown */}
+        {/* Notification Bell with Dropdown */}
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => {
