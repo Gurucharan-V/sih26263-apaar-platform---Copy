@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  Building2, 
-  ShieldCheck, 
-  Lock, 
-  Mail, 
-  Eye, 
-  EyeOff, 
-  Globe, 
-  ArrowRight, 
+import {
+  Building2,
+  ShieldCheck,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  Globe,
+  ArrowRight,
   Sparkles,
   HelpCircle,
   FileCheck2,
@@ -63,7 +63,7 @@ export default function Login() {
     if (!identifier.trim()) {
       errors.identifier = 'Email address or Student ID is required';
     } else if (
-      !identifier.includes('@') && 
+      !identifier.includes('@') &&
       !/^[A-Za-z0-9]{8,15}$/.test(identifier.trim())
     ) {
       errors.identifier = 'Please enter a valid institutional email or Student ID';
@@ -116,8 +116,8 @@ export default function Login() {
     const nextLang = i18n.language === 'en' ? 'hi' : 'en';
     i18n.changeLanguage(nextLang);
     toast.success(
-      nextLang === 'hi' 
-        ? 'भाषा बदलकर हिन्दी कर दी गई है' 
+      nextLang === 'hi'
+        ? 'भाषा बदलकर हिन्दी कर दी गई है'
         : 'Language switched to English',
       { icon: '🌐' }
     );
@@ -177,7 +177,7 @@ export default function Login() {
       {/* Main Container - Desktop-first at 1440x900 */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto w-full">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
+
           {/* Left Column: Graphic & Academic Integrity Architecture (6 Cols) */}
           <div className="lg:col-span-6 space-y-6">
             {/* Institution Badge */}
