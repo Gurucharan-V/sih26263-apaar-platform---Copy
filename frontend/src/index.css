@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800;
+  }
+
+  ::selection {
+    background-color: #bfdbfe !important;
+    color: #0f172a !important;
+  }
+}
+
+/* Explicit fallback utilities for theme colors */
+@layer utilities {
+  .bg-navy-800 {
+    background-color: #163A70 !important;
+  }
+  .hover\:bg-navy-900:hover {
+    background-color: #0F2850 !important;
+  }
+  .text-navy-800 {
+    color: #163A70 !important;
+  }
+  .text-navy-950 {
+    color: #0A1B38 !important;
+  }
+  .bg-navy-50 {
+    background-color: #F0F4FA !important;
+  }
+  .border-navy-200 {
+    border-color: #C2D3EB !important;
+  }
+  .border-navy-600 {
+    border-color: #214E94 !important;
+  }
+  .border-navy-700 {
+    border-color: #1B4380 !important;
+  }
+  .bg-surface {
+    background-color: #F5F7FA !important;
+  }
+}
+
+/* Production-grade Primary Navy Button Style */
+.btn-primary-navy {
+  background-color: #163A70 !important;
+  color: #FFFFFF !important;
+}
+
+.btn-primary-navy:hover {
+  background-color: #0F2850 !important;
+  color: #FFFFFF !important;
+}

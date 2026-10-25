@@ -1,0 +1,88 @@
+name: CI – Lint & Test
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend – Lint & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: apaar_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test_user"
+          --health-interval 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+        working-directory: backend
+
+      - run: npx prisma generate
+        working-directory: backend
+
+      - run: npm run lint
+        working-directory: backend
+
+      - run: npm test
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/apaar_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-test-secret
+
+  frontend:
+    name: Frontend – Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+        working-directory: frontend
+
+      - run: npm run lint
+        working-directory: frontend
+
+      - run: npm run type-check
+        working-directory: frontend
+
+  analytics:
+    name: Analytics – Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+        working-directory: analytics
+
+      - run: python -m pytest app/tests/ -v
+        working-directory: analytics

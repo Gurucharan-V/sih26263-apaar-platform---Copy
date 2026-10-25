@@ -1,0 +1,287 @@
+openapi: "3.0.3"
+info:
+  title: APAAR Platform API
+  version: "1.0.0"
+  description: |
+    REST API for the SIH 26263 APAAR data-ingestion, validation,
+    deduplication and anomaly-detection platform.
+
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Institutions
+  - name: Programmes
+  - name: Students
+  - name: Uploads
+  - name: Cases
+  - name: Intake
+  - name: Verification
+  - name: Reports
+  - name: Audit
+
+paths:
+  # ── Auth ──────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: JWT token pair
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        "401":
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: New token pair
+
+  # ── Uploads ───────────────────────────────
+  /uploads:
+    post:
+      tags: [Uploads]
+      summary: Upload a student CSV/Excel file
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                programmeId:
+                  type: string
+                  format: uuid
+      responses:
+        "202":
+          description: Upload accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued]
+    get:
+      tags: [Uploads]
+      summary: List upload history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of uploads
+
+  /uploads/{uploadId}:
+    get:
+      tags: [Uploads]
+      summary: Get upload status & validation results
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uploadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Upload details with errors
+
+  # ── Students ──────────────────────────────
+  /students:
+    get:
+      tags: [Students]
+      summary: List students (filterable)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Paginated student list
+
+    post:
+      tags: [Students]
+      summary: Create a single student record
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Student created
+
+  # ── Cases ─────────────────────────────────
+  /cases:
+    get:
+      tags: [Cases]
+      summary: List flagged cases for review
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Paginated case list
+
+  /cases/{caseId}/resolve:
+    patch:
+      tags: [Cases]
+      summary: Resolve a flagged case
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution]
+              properties:
+                resolution:
+                  type: string
+                  enum: [approved, rejected, merged]
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Case resolved
+
+  # ── Reports ───────────────────────────────
+  /reports/summary:
+    get:
+      tags: [Reports]
+      summary: Aggregate dashboard stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Summary statistics
+
+  # ── Audit ─────────────────────────────────
+  /audit-logs:
+    get:
+      tags: [Audit]
+      summary: Query audit trail
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: action
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated audit logs
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StudentInput:
+      type: object
+      required:
+        - name
+        - apaarId
+        - dateOfBirth
+        - gender
+        - programmeId
+      properties:
+        name:
+          type: string
+        apaarId:
+          type: string
+          pattern: "^[0-9]{12}$"
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female, other]
+        guardianName:
+          type: string
+        contactPhone:
+          type: string
+        email:
+          type: string
+          format: email
+        programmeId:
+          type: string
+          format: uuid
+        enrollmentYear:
+          type: integer

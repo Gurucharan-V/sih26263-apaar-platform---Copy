@@ -1,0 +1,49 @@
+{
+  "common": {
+    "welcome": "Welcome to APAAR Platform",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "status": "Status",
+    "language": "Language",
+    "officialPortal": "Government of India Verification Gateway"
+  },
+  "auth": {
+    "title": "APAAR National Verification Gateway",
+    "subtitle": "Automated Permanent Academic Account Registry • SIH 26263",
+    "portalRole": "Select Access Portal",
+    "collegeRole": "College Nodal Officer",
+    "adminRole": "Ministry / Govt Admin",
+    "email": "Official Institutional Email",
+    "password": "Password",
+    "signIn": "Secure Sign In",
+    "signingIn": "Verifying Credentials...",
+    "quickFill": "Demo Quick Login",
+    "vitNodal": "Easwari Engineering College (EEC) Nodal",
+    "moeAdmin": "MoE State Admin",
+    "securityNotice": "Protected by 256-Bit TLS & Verhoeff Checksum Validation. Unauthorized access is punishable under IT Act 2000.",
+    "support": "Helpline: 1800-111-678 | support-apaar@gov.in"
+  },
+  "nav": {
+    "systemTitle": "APAAR System",
+    "collegePortal": "College Portal",
+    "adminPortal": "Admin Portal",
+    "dashboard": "Dashboard",
+    "bulkUpload": "Bulk Ingestion",
+    "registerStudent": "Register Student",
+    "uploadHistory": "Upload History",
+    "commandCenter": "Command Center",
+    "institutions": "Institutions",
+    "intakeDiscrepancy": "Intake Discrepancy",
+    "caseQueue": "Case Queue",
+    "apaarLookup": "APAAR Lookup",
+    "reports": "Reports",
+    "auditTrail": "Audit Trail",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No new notifications",
+    "profile": "Institutional Profile",
+    "settings": "Settings",
+    "logout": "Sign Out",
+    "langChanged": "Language switched to English"
+  }
+}

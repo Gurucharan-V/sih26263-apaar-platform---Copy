@@ -1,0 +1,138 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  STATE_ADMIN
+  COLLEGE_NODAL
+}
+
+enum CaseStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  MERGED
+}
+
+enum UploadStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  passwordHash   String
+  role           Role          @default(COLLEGE_NODAL)
+  institutionId  String?
+  institution    Institution?  @relation(fields: [institutionId], references: [id])
+  auditLogs      AuditLog[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Institution {
+  id             String        @id @default(uuid())
+  aisheCode      String        @unique
+  name           String
+  state          String
+  district       String
+  users          User[]
+  programmes     Programme[]
+  uploads        Upload[]
+  students       Student[]
+  createdAt      DateTime      @default(now())
+}
+
+model Programme {
+  id             String        @id @default(uuid())
+  code           String
+  name           String
+  academicYear   String
+  approvedIntake Int
+  institutionId  String
+  institution    Institution   @relation(fields: [institutionId], references: [id])
+  students       Student[]
+  createdAt      DateTime      @default(now())
+
+  @@unique([institutionId, code, academicYear])
+}
+
+model Student {
+  id               String       @id @default(uuid())
+  apaarIdHash      String       @unique // HMAC-SHA256 for searching
+  encryptedApaarId String       // AES-256-GCM
+  encryptedName    String
+  dateOfBirth      DateTime
+  gender           String
+  encryptedAadhaar String?
+  guardianName     String?
+  programmeId      String
+  programme        Programme    @relation(fields: [programmeId], references: [id])
+  institutionId    String
+  institution      Institution  @relation(fields: [institutionId], references: [id])
+  enrollmentYear   Int
+  createdAt        DateTime     @default(now())
+  cases            Case[]
+}
+
+model Upload {
+  id            String         @id @default(uuid())
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id])
+  filename      String
+  s3Key         String
+  status        UploadStatus   @default(QUEUED)
+  totalRows     Int            @default(0)
+  validRows     Int            @default(0)
+  errorRows     Int            @default(0)
+  uploadRows    UploadRow[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model UploadRow {
+  id         String   @id @default(uuid())
+  uploadId   String
+  upload     Upload   @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  rowNumber  Int
+  rawPayload Json
+  isValid    Boolean
+  errorMsg   String?
+  fieldViolated String?
+}
+
+model Case {
+  id             String       @id @default(uuid())
+  studentId      String?
+  student        Student?     @relation(fields: [studentId], references: [id])
+  anomalyType    String       // DUPLICATE_APAAR, OVER_INTAKE, AADHAAR_COLLISION
+  severity       String       // LOW, MEDIUM, HIGH, CRITICAL
+  confidence     Float        @default(1.0)
+  description    String
+  status         CaseStatus   @default(PENDING_REVIEW)
+  resolutionNotes String?
+  resolvedBy     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entity     String
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}

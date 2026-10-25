@@ -1,0 +1,51 @@
+{
+  "info": {
+    "name": "SIH 26263 APAAR Platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nodal@vit.ac.in\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/v1/auth/login" }
+      }
+    },
+    {
+      "name": "Intake - Check Discrepancies",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "http://localhost:4000/api/v1/intake/discrepancies" }
+      }
+    },
+    {
+      "name": "Cases - List Pending",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "http://localhost:4000/api/v1/cases" }
+      }
+    },
+    {
+      "name": "Verification - Lookup APAAR",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"apaarId\": \"982345123490\"\n}"
+        },
+        "url": { "raw": "http://localhost:4000/api/v1/verification" }
+      }
+    }
+  ]
+}
