@@ -1,0 +1,6 @@
+name,apaarId,dateOfBirth,gender,guardianName,email,contactPhone,programmeId,enrollmentYear
+Aarav Sharma,INVALID_APAAR,2003-01-15,male,Rajesh Sharma,aarav.sharma@example.com,9876543201,BTECH-CSE,2024
+Vihaan Patil,982345123402,1990-99-99,male,Suresh Patil,vihaan.patil@example.com,9876543202,BTECH-CSE,2024
+Sanya Gupta,982345123403,2004-03-17,female,Anil Gupta,sanya.gupta@example.com,12345,BTECH-ECE,2024
+,982345123404,2003-04-18,female,Venkatesh Reddy,diya.reddy@example.com,9876543204,BTECH-IT,2024
+Rahul Nair,982345123404,2004-05-19,male,Mohan Nair,rahul.nair@example.com,9876543205,BTECH-MECH,2024

@@ -12,7 +12,13 @@ import {
   Landmark,
   FileText,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Users,
+  Download,
+  Search,
+  AlertTriangle,
+  Hash,
+  Check
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -20,38 +26,40 @@ import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { UploadArea } from '../../components/ui/UploadArea';
 import { Navbar } from '../../components/layout/Navbar';
+import { useAuth } from '../../hooks/useAuth';
+import { useCollegeData } from '../../hooks/useCollegeData';
+import { COLLEGE_DETAILS, CrossVerificationResult } from '../../services/collegeStudentService';
+import { downloadStandardCsvTemplate } from '../../utils/csvTemplate';
 import toast from 'react-hot-toast';
 
 export default function UploadPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Selected college for verification
+  const initialCode = user?.aisheCode || 'C-18491';
+  const [selectedCollegeCode, setSelectedCollegeCode] = useState<string>(initialCode);
+  const { collegeDetails, students, crossVerify } = useCollegeData(selectedCollegeCode);
 
   // Form fields
-  const [apaarId, setApaarId] = useState('9842 1083 4912');
+  const [apaarId, setApaarId] = useState('9842-1083-4912');
   const [studentName, setStudentName] = useState('Rohan Sundaram');
-  const [institution, setInstitution] = useState('National Institute of Technology & Engineering');
+  const [rollNo, setRollNo] = useState('EEC2024CS042');
   const [department, setDepartment] = useState('Computer Science & Engineering');
   const [course, setCourse] = useState('B.E. Computer Science and Engineering (4-Year)');
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(() => {
-    // default sample mock file
     return new File(['sample academic transcript'], 'EEC_Academic_Transcript_2024.pdf', {
       type: 'application/pdf',
     });
   });
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(100);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Submission / Verification Status
-  const [submissionStatus, setSubmissionStatus] = useState<
-    'idle' | 'in_progress' | 'verified' | 'failed'
-  >('idle');
-  const [verificationDetails, setVerificationDetails] = useState<{
-    referenceId?: string;
-    timestamp?: string;
-    checksum?: string;
-  }>({});
+  // Cross-verification result state
+  const [verificationResult, setVerificationResult] = useState<CrossVerificationResult | null>(null);
 
   const handleFileSelect = (file: File | null) => {
     setUploadError(null);
@@ -61,7 +69,6 @@ export default function UploadPage() {
       return;
     }
 
-    // Format check (allowed: pdf, jpg, png, csv, xlsx)
     const allowed = ['pdf', 'jpg', 'jpeg', 'png', 'csv', 'xlsx'];
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     if (!allowed.includes(ext)) {
@@ -69,366 +76,363 @@ export default function UploadPage() {
       return;
     }
 
-    // Size check (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setUploadError(`File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds maximum 5MB limit.`);
       return;
     }
 
     setSelectedFile(file);
-    // Simulate upload progress
-    setUploadProgress(25);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 150);
+    setUploadProgress(100);
   };
 
   const handleCancel = () => {
     setSelectedFile(null);
     setUploadProgress(0);
     setUploadError(null);
-    setSubmissionStatus('idle');
-    toast('Upload draft cleared', { icon: '🧹' });
+    setVerificationResult(null);
+    toast('Verification form cleared', { icon: '🧹' });
+  };
+
+  const handleQuickSelectStudent = (s: any) => {
+    setApaarId(s.apaarId);
+    setStudentName(s.name);
+    setRollNo(s.rollNo);
+    setDepartment(s.programmeId);
+    setVerificationResult(null);
+    toast.success(`Loaded ${s.name} from ${collegeDetails.shortName} bulk list`);
   };
 
   const triggerVerification = () => {
     setUploadError(null);
 
-    // Validation
-    const cleanApaar = apaarId.replace(/\s+/g, '');
-    if (!cleanApaar || cleanApaar.length !== 12 || !/^\d+$/.test(cleanApaar)) {
-      setUploadError('Invalid APAAR ID format. Must be an exact 12-digit numeric identifier.');
+    const cleanApaar = apaarId.replace(/[^0-9]/g, '');
+    if (!cleanApaar || cleanApaar.length !== 12) {
+      setUploadError('Invalid APAAR ID format. Must contain exactly 12 numeric digits.');
       return;
     }
 
-    if (!studentName.trim() || !department.trim()) {
-      setUploadError('Please fill in all mandatory student academic fields.');
-      return;
-    }
-
-    if (!selectedFile) {
-      setUploadError('Please select or upload a document before submitting.');
+    if (!studentName.trim()) {
+      setUploadError('Please enter student full legal name.');
       return;
     }
 
     setIsSubmitting(true);
-    setSubmissionStatus('in_progress');
 
-    // Simulate multi-step verification against AICTE & Anna University database
+    // Cross-verify against this college's uploaded bulk list
     setTimeout(() => {
+      const result = crossVerify(apaarId, studentName, rollNo);
+      setVerificationResult(result);
       setIsSubmitting(false);
-      setSubmissionStatus('verified');
-      setVerificationDetails({
-        referenceId: `EEC-APAAR-${Math.floor(100000 + Math.random() * 900000)}`,
-        timestamp: new Date().toLocaleTimeString(),
-        checksum: 'Verhoeff Algorithm Check: PASSED (Digit 9 Validated)',
-      });
-      toast.success('Document verified & linked with national APAAR registry!');
-    }, 1200);
-  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    triggerVerification();
+      if (result.isVerified) {
+        toast.success(`APAAR ID Verified against ${collegeDetails.name} Bulk List!`);
+      } else if (result.status === 'WRONG_COLLEGE_ROSTER') {
+        toast.error('College mismatch detected! APAAR ID belongs to another college.');
+      } else {
+        toast.error('Cross-verification failed: Not found in college bulk upload.');
+      }
+    }, 600);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface font-sans selection:bg-blue-200 selection:text-slate-900">
-      <Navbar portal="college" />
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar portal={user?.role === 'STUDENT' ? 'student' : user?.role === 'MODERATOR' ? 'moderator' : 'college'} />
 
-      {/* Header Bar */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <main className="flex-1 max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 w-full">
+        {/* Navigation & Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <button
-            onClick={() => navigate('/login')}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-navy-800 hover:bg-slate-100 transition"
-            title="Back to Login"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 w-fit"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
           </button>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex items-center justify-center shadow-xs border border-slate-700/50">
-            <Building2 className="w-5 h-5 text-blue-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-slate-900 text-sm sm:text-base">
-                Student Information & Document Upload
-              </h1>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Portal Active
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium">
-              National Institute of Technology & Engineering • AICTE Institution Code: 1-10971201
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-            onClick={() => navigate('/login')}
-          >
-            Return to Login
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
-        
-        {/* Verification Success Banner */}
-        {submissionStatus === 'verified' && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <Alert
-              variant="success"
-              title="Verification Completed & Registered Successfully!"
-              message={
-                <div className="space-y-1 mt-1 text-xs">
-                  <p>
-                    APAAR ID <strong className="font-mono">{apaarId}</strong> has been verified against AICTE sanctioned intake quotas for Easwari Engineering College.
-                  </p>
-                  <p className="font-mono text-emerald-800 text-[11px]">
-                    Reference ID: {verificationDetails.referenceId} • Timestamp: {verificationDetails.timestamp}
-                  </p>
-                  <p className="font-mono text-emerald-700 text-[10px]">
-                    {verificationDetails.checksum}
-                  </p>
-                </div>
-              }
-              actionText="Upload Another Student Record"
-              onAction={() => {
-                setSubmissionStatus('idle');
-                handleCancel();
-              }}
-            />
-          </div>
-        )}
-
-        {/* Form Error Banner */}
-        {uploadError && (
-          <div className="animate-in fade-in duration-200">
-            <Alert
-              variant="error"
-              title="Submission Validation Error"
-              message={uploadError}
-              actionText="Dismiss & Fix"
-              onAction={() => setUploadError(null)}
-              onClose={() => setUploadError(null)}
-            />
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left Column: Student Academic Metadata (6 Cols) */}
-            <div className="lg:col-span-6 space-y-4">
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-navy-800" />
-                    <span>Academic & Student Identity</span>
-                  </h3>
-                  <span className="text-[10px] font-mono text-slate-400">Step 1 of 2</span>
-                </div>
-
-                {/* APAAR ID */}
-                <Input
-                  label="APAAR ID (12-Digit Numeric)"
-                  placeholder="e.g. 9842 1083 4912"
-                  value={apaarId}
-                  onChange={(e) => setApaarId(e.target.value)}
-                  helperText="Unique permanent academic account registry identifier."
-                  leftIcon={<ShieldCheck className="w-4 h-4" />}
-                  required
-                />
-
-                {/* Student Full Name */}
-                <Input
-                  label="Student Full Name (As per 10th/12th Marks)"
-                  placeholder="e.g. Rohan Sundaram"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  required
-                />
-
-                {/* Institution (Read-Only / Fixed to EEC) */}
-                <Input
-                  label="Institution"
-                  value={institution}
-                  onChange={(e) => setInstitution(e.target.value)}
-                  leftIcon={<Landmark className="w-4 h-4" />}
-                  required
-                />
-
-                {/* Department */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Department <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-navy-600 focus:border-navy-600 shadow-sm"
-                  >
-                    <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                    <option value="Information Technology">Information Technology</option>
-                    <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                    <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
-                    <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
-                  </select>
-                </div>
-
-                {/* Course */}
-                <Input
-                  label="Enrolled Course / Degree Program"
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
-                  required
-                />
-              </Card>
-            </div>
-
-            {/* Right Column: Document Upload Section (6 Cols) */}
-            <div className="lg:col-span-6 space-y-4">
-              <Card className="p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-navy-800" />
-                    <span>Document Upload Section</span>
-                  </h3>
-                  <span className="text-[10px] font-mono text-slate-400">Step 2 of 2</span>
-                </div>
-
-                {/* Upload Area Component */}
-                <UploadArea
-                  onFileSelect={handleFileSelect}
-                  selectedFile={selectedFile}
-                  progress={uploadProgress}
-                  allowedFormats={['PDF', 'JPG', 'PNG', 'CSV', 'XLSX']}
-                  maxSizeMB={5}
-                />
-
-                {/* Submission Status Box */}
-                <div
-                  className={`p-4 rounded-xl border space-y-2.5 transition-all ${
-                    submissionStatus === 'verified'
-                      ? 'bg-emerald-50/70 border-emerald-200'
-                      : submissionStatus === 'in_progress'
-                      ? 'bg-blue-50/70 border-blue-200'
-                      : selectedFile && uploadProgress === 100
-                      ? 'bg-emerald-50/50 border-emerald-300 shadow-xs'
-                      : 'bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-700">Verification Status:</span>
-                    {submissionStatus === 'verified' ? (
-                      <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Verified & Recorded
-                      </span>
-                    ) : submissionStatus === 'in_progress' ? (
-                      <span className="inline-flex items-center gap-1.5 font-bold text-blue-700 animate-pulse">
-                        <Clock className="w-3.5 h-3.5 animate-spin text-blue-700" /> Verifying with AICTE...
-                      </span>
-                    ) : selectedFile && uploadProgress === 100 ? (
-                      <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Pre-Validated & Ready to Submit
-                      </span>
-                    ) : uploadProgress > 0 && uploadProgress < 100 ? (
-                      <span className="inline-flex items-center gap-1 text-blue-700 font-medium">
-                        <Clock className="w-3.5 h-3.5 animate-spin" /> Checksum Calculating ({uploadProgress}%)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-slate-500 font-medium">
-                        <Clock className="w-3.5 h-3.5" /> Awaiting Document Upload
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    {submissionStatus === 'verified' ? (
-                      'Document cryptographic hash confirmed. Record officially bound to AICTE intake quota for Easwari Engineering College.'
-                    ) : selectedFile && uploadProgress === 100 && submissionStatus === 'idle' ? (
-                      'Document uploaded and Verhoeff checksum pre-validation passed! Click "Submit for Verification" below or use the quick action button to complete AICTE registration.'
-                    ) : (
-                      'Submissions undergo instant Verhoeff checksum calculation, institutional deduplication, and AICTE intake capacity confirmation.'
-                    )}
-                  </p>
-
-                  {/* Direct Quick Action when file is 100% pre-validated */}
-                  {selectedFile && uploadProgress === 100 && submissionStatus === 'idle' && (
-                    <div className="pt-2.5 border-t border-emerald-200/80 flex flex-col sm:flex-row items-center justify-between gap-2 animate-in fade-in">
-                      <span className="text-[11px] font-semibold text-emerald-900">
-                        Ready to link with national APAAR registry:
-                      </span>
-                      <button
-                        type="button"
-                        onClick={triggerVerification}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-navy-800 hover:bg-navy-900 transition shadow-sm cursor-pointer"
-                        style={{ backgroundColor: '#163A70', color: '#FFFFFF' }}
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-white" />
-                        <span>Run AICTE Verification Now</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Form Actions Footer */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                onClick={() => navigate('/login')}
-                leftIcon={<ArrowLeft className="w-4 h-4" />}
-                className="w-full sm:w-auto"
-              >
-                Back to Login
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                onClick={handleCancel}
-                leftIcon={<RotateCcw className="w-4 h-4" />}
-                className="w-full sm:w-auto text-slate-500 hover:text-slate-800"
-              >
-                Cancel Draft
-              </Button>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isSubmitting}
-              className={`w-full sm:w-auto transition-all ${
-                selectedFile && uploadProgress === 100 && submissionStatus === 'idle'
-                  ? 'ring-4 ring-navy-200 shadow-md font-bold'
-                  : ''
-              }`}
-              style={{ backgroundColor: '#163A70', color: '#FFFFFF' }}
-              leftIcon={<Send className="w-4 h-4 text-white" />}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => downloadStandardCsvTemplate(selectedCollegeCode, collegeDetails.shortName)}
+              className="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
-              {isSubmitting ? 'Verifying with Registry...' : 'Submit for Verification'}
-            </Button>
+              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <span>Standard CSV Template</span>
+            </button>
+            <button
+              onClick={() => navigate('/college/upload')}
+              className="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Manage College Bulk List</span>
+            </button>
           </div>
-        </form>
+        </div>
+
+        {/* Title & Banner */}
+        <div className="p-6 bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-3xl shadow-xl border border-blue-900/50 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">
+              <ShieldCheck className="w-5 h-5" />
+            </span>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                APAAR ID Cross-Verification Engine
+              </h1>
+              <p className="text-xs text-slate-300">
+                Cross-verifies individual student APAAR credentials directly against the institution's uploaded bulk ingestion file set
+              </p>
+            </div>
+          </div>
+
+          {/* College Selector */}
+          <div className="pt-2 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-blue-300" />
+              <span className="text-slate-300">Verifying against College:</span>
+              <select
+                value={selectedCollegeCode}
+                onChange={(e) => {
+                  setSelectedCollegeCode(e.target.value);
+                  setVerificationResult(null);
+                }}
+                className="bg-white/10 border border-white/20 text-white rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+              >
+                {Object.values(COLLEGE_DETAILS).map((col) => (
+                  <option key={col.code} value={col.code} className="text-slate-900 bg-white">
+                    {col.name} ({col.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 text-slate-300">
+              <span className="font-mono text-blue-300 font-bold">{students.length} students</span> in uploaded bulk roster
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Sample Students from this College's Bulk List */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              Quick Fill from {collegeDetails.shortName} Uploaded Bulk List:
+            </span>
+            <span className="text-[11px] text-slate-400">Click any student to test cross-verification</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {students.slice(0, 4).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleQuickSelectStudent(s)}
+                className="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-900 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                <span>{s.name}</span>
+                <span className="font-mono text-[10px] text-blue-700">({s.apaarId})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Verification Form & Upload Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Form: Student Input Particulars */}
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <FileText className="w-4 h-4 text-blue-600" />
+              <span>Student Academic Particulars to Cross-Verify</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  12-Digit APAAR ID <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={apaarId}
+                  onChange={(e) => {
+                    setApaarId(e.target.value);
+                    setVerificationResult(null);
+                  }}
+                  placeholder="e.g. 9842-1083-4912"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold text-blue-900 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Student Full Legal Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={(e) => {
+                    setStudentName(e.target.value);
+                    setVerificationResult(null);
+                  }}
+                  placeholder="e.g. Rohan Sundaram"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Institutional Roll / Enrolment #
+                </label>
+                <input
+                  type="text"
+                  value={rollNo}
+                  onChange={(e) => {
+                    setRollNo(e.target.value);
+                    setVerificationResult(null);
+                  }}
+                  placeholder="e.g. EEC2024CS042"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-700 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Academic Department / Programme
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="e.g. BTECH-CSE"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Document Verification Attachment */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Supporting Identity Document / Academic Transcript (Optional)
+              </label>
+              <UploadArea
+                onFileSelect={handleFileSelect}
+                selectedFile={selectedFile}
+                progress={uploadProgress}
+              />
+            </div>
+
+            {uploadError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={triggerVerification}
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
+              >
+                <Search className="w-4 h-4" />
+                <span>{isSubmitting ? 'Cross-Verifying with College Roster...' : 'Cross-Verify with Bulk List'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: College Bulk Roster Status & Verification Feedback */}
+          <div className="space-y-4">
+            {/* Institution Details Card */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                <Building2 className="w-4 h-4 text-blue-600" />
+                <h4 className="font-bold text-xs text-slate-900">Target College Profile</h4>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">Institution</span>
+                  <div className="font-bold text-slate-800">{collegeDetails.name}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">AISHE Code</span>
+                  <div className="font-mono text-blue-700 font-bold">{collegeDetails.code}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">Affiliation</span>
+                  <div className="text-slate-600">{collegeDetails.affiliation}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold">Uploaded Bulk Students</span>
+                  <div className="font-bold text-emerald-700">{students.length} Records in Active File Set</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Result Card */}
+            {verificationResult && (
+              <div
+                className={`p-5 rounded-3xl border shadow-md space-y-3 animate-in fade-in zoom-in-95 duration-150 ${
+                  verificationResult.status === 'VERIFIED_MATCH'
+                    ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-300'
+                    : verificationResult.status === 'WRONG_COLLEGE_ROSTER'
+                    ? 'bg-gradient-to-br from-rose-50 via-white to-amber-50 border-rose-300'
+                    : 'bg-gradient-to-br from-amber-50 via-white to-slate-50 border-amber-300'
+                }`}
+              >
+                <div className="flex items-center gap-2 border-b pb-2">
+                  {verificationResult.status === 'VERIFIED_MATCH' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  ) : verificationResult.status === 'WRONG_COLLEGE_ROSTER' ? (
+                    <AlertTriangle className="w-5 h-5 text-rose-600" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                  )}
+                  <div>
+                    <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900">
+                      {verificationResult.status === 'VERIFIED_MATCH'
+                        ? 'Cross-Verification Successful'
+                        : verificationResult.status === 'WRONG_COLLEGE_ROSTER'
+                        ? 'College Ingestion Conflict'
+                        : 'Bulk Ingestion Mismatch'}
+                    </h4>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                  {verificationResult.message}
+                </p>
+
+                {verificationResult.matchedRecord && (
+                  <div className="p-3 bg-white/90 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
+                    <div className="text-[10px] text-slate-400 font-sans font-bold uppercase">
+                      Matched College Bulk Record:
+                    </div>
+                    <div><span className="text-slate-400 font-sans">Name:</span> <span className="font-bold text-slate-900">{verificationResult.matchedRecord.name}</span></div>
+                    <div><span className="text-slate-400 font-sans">APAAR:</span> <span className="text-blue-700 font-bold">{verificationResult.matchedRecord.apaarId}</span></div>
+                    <div><span className="text-slate-400 font-sans">Roll #:</span> {verificationResult.matchedRecord.rollNo}</div>
+                    <div><span className="text-slate-400 font-sans">Batch:</span> {verificationResult.matchedRecord.batchId || 'Admissions Master'}</div>
+                  </div>
+                )}
+
+                {verificationResult.discrepancies && verificationResult.discrepancies.length > 0 && (
+                  <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 text-xs space-y-1 text-rose-800">
+                    <div className="font-bold text-rose-950">Field Discrepancies:</div>
+                    {verificationResult.discrepancies.map((d, i) => (
+                      <div key={i}>• {d}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

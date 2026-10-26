@@ -16,11 +16,14 @@ import {
   FileText,
   AlertTriangle,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useQueries, StudentQuery } from '../../hooks/useQueries';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useCollegeData } from '../../hooks/useCollegeData';
 import toast from 'react-hot-toast';
 
 export default function CollegeQueries() {
@@ -28,12 +31,15 @@ export default function CollegeQueries() {
   const collegeName = user?.institutionName || 'Easwari Engineering College';
   const collegeCode = user?.aisheCode || 'C-18491';
 
-  const { queries, addQuery, updateQueryStatus } = useQueries();
+  const { queries, addQuery, updateQueryStatus, refreshQueries } = useQueries();
   const { sendNotification } = useNotifications('COLLEGE_NODAL', collegeCode);
+  const { students: collegeStudents, collegeDetails } = useCollegeData(collegeCode);
 
   const [activeTab, setActiveTab] = useState<'student_queries' | 'submit_grievance' | 'moderator_notices'>('student_queries');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING_REVIEW' | 'IN_PROGRESS' | 'RESOLVED'>('ALL');
+  const [queryScope, setQueryScope] = useState<'COLLEGE_ONLY' | 'ALL'>('COLLEGE_ONLY');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Response modal
   const [selectedQuery, setSelectedQuery] = useState<StudentQuery | null>(null);
@@ -49,15 +55,37 @@ export default function CollegeQueries() {
   const [instReferenceId, setInstReferenceId] = useState('');
   const [isSubmittingInst, setIsSubmittingInst] = useState(false);
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    refreshQueries();
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success('Grievance registry synchronized!');
+    }, 400);
+  };
+
   // Filter queries relevant to this college
   const relevantQueries = queries.filter((q) => {
+    const qCleanApaar = q.apaarId.replace(/[^0-9]/g, '');
+    
+    // Check if student belongs to this college's uploaded bulk student roster
+    const studentInCollegeBulkList = collegeStudents.some(
+      (s) => s.apaarId.replace(/[^0-9]/g, '') === qCleanApaar ||
+             s.name.toLowerCase() === q.studentName.toLowerCase()
+    );
+
     const isThisCollege =
+      (q.aisheCode && q.aisheCode.toUpperCase() === collegeCode.toUpperCase()) ||
       q.institution.toLowerCase().includes(collegeName.toLowerCase()) ||
+      collegeName.toLowerCase().includes(q.institution.toLowerCase()) ||
       q.institution.includes(collegeCode) ||
+      studentInCollegeBulkList ||
       (collegeCode === 'C-18491' && q.institution.toLowerCase().includes('easwari')) ||
       (collegeCode === 'C-16622' && q.institution.toLowerCase().includes('chennai'));
 
-    // Also include general queries if searching specifically
+    // Include general queries if searching specifically or scope set to ALL
+    const matchesScope = queryScope === 'ALL' || isThisCollege;
+
     const matchesSearch =
       q.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.apaarId.includes(searchQuery) ||
@@ -66,7 +94,7 @@ export default function CollegeQueries() {
 
     const matchesStatus = statusFilter === 'ALL' || q.status === statusFilter;
 
-    return (isThisCollege || searchQuery.length > 2) && matchesSearch && matchesStatus;
+    return (matchesScope || searchQuery.length > 2) && matchesSearch && matchesStatus;
   });
 
   // Notices sent to this college from Moderator
@@ -135,10 +163,11 @@ export default function CollegeQueries() {
 
     setIsSubmittingInst(true);
     setTimeout(() => {
-      const newGrievance = addQuery({
+      addQuery({
         studentName: `[Institution Nodal Officer] ${collegeName}`,
         apaarId: `AISHE:${collegeCode}`,
         institution: `${collegeName} (${collegeCode})`,
+        aisheCode: collegeCode,
         category: instCategory,
         subject: `[${collegeCode}] ${instSubject}`,
         description: `Ref ID: ${instReferenceId || 'N/A'}\n\n${instDescription}`,
@@ -182,17 +211,29 @@ export default function CollegeQueries() {
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Resolve student discrepancies and lodge official institutional petitions with the National Moderator
+            Student inquiries cross-verified against <span className="font-semibold text-slate-700">{collegeName}</span> uploaded bulk records
           </p>
         </div>
 
-        <button
-          onClick={() => setActiveTab('submit_grievance')}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Raise Grievance to AICTE</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            className={`px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer ${
+              isRefreshing ? 'animate-spin' : ''
+            }`}
+            title="Refresh student queries"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
+            <span>Sync</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('submit_grievance')}
+            className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Raise Grievance to AICTE</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -238,7 +279,7 @@ export default function CollegeQueries() {
       {activeTab === 'student_queries' && (
         <div className="space-y-4">
           {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-3.5 rounded-2xl border border-slate-200">
             <div className="relative w-full sm:w-80">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
@@ -250,19 +291,44 @@ export default function CollegeQueries() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-xs text-slate-500 font-medium">Status:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="PENDING_REVIEW">Pending Review</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="RESOLVED">Resolved</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <button
+                  onClick={() => setQueryScope('COLLEGE_ONLY')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    queryScope === 'COLLEGE_ONLY'
+                      ? 'bg-white text-blue-700 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  This College ({collegeCode})
+                </button>
+                <button
+                  onClick={() => setQueryScope('ALL')}
+                  className={`px-3 py-1 rounded-lg transition ${
+                    queryScope === 'ALL'
+                      ? 'bg-white text-blue-700 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  All Inquiries ({queries.length})
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500 font-medium">Status:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING_REVIEW">Pending Review</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -272,7 +338,7 @@ export default function CollegeQueries() {
               <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
               <h3 className="font-bold text-slate-800 text-sm">No Pending Student Grievances</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                All student inquiries for {collegeName} have been reviewed and resolved.
+                All student inquiries for {collegeName} ({collegeCode}) are currently resolved. When students submit new queries, they will appear here in real-time.
               </p>
             </div>
           ) : (
@@ -282,16 +348,37 @@ export default function CollegeQueries() {
                 const isPending = q.status === 'PENDING_REVIEW';
                 const isCritical = q.priority === 'CRITICAL' || q.priority === 'HIGH';
 
+                // Check if student is present in this college's uploaded bulk roster
+                const inBulkRoster = collegeStudents.some(
+                  (s) => s.apaarId.replace(/[^0-9]/g, '') === q.apaarId.replace(/[^0-9]/g, '')
+                );
+
                 return (
                   <div
                     key={q.id}
                     className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-blue-300 shadow-xs transition space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                           {q.id}
                         </span>
+                        {q.aisheCode && (
+                          <span className="font-mono text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                            AISHE: {q.aisheCode}
+                          </span>
+                        )}
+                        {inBulkRoster ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            In College Bulk List
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            Direct Inquiry
+                          </span>
+                        )}
                         <span
                           className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                             isCritical ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'
@@ -331,6 +418,9 @@ export default function CollegeQueries() {
                         </span>
                         <span className="font-mono text-slate-600">
                           APAAR: {q.apaarId}
+                        </span>
+                        <span className="text-slate-400">
+                          {q.institution}
                         </span>
                       </div>
 
@@ -628,14 +718,14 @@ export default function CollegeQueries() {
                 <button
                   type="button"
                   onClick={() => setSelectedQuery(null)}
-                  className="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                  className="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingReply}
-                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isSubmittingReply ? 'Dispatching...' : 'Dispatch Resolution'}</span>

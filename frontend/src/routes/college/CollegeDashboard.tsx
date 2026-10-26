@@ -1,21 +1,77 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, UserPlus, AlertTriangle, CheckCircle, FileText, Building2, Hash, Send, X, Bell, HelpCircle } from 'lucide-react';
+import { 
+  UploadCloud, 
+  UserPlus, 
+  AlertTriangle, 
+  CheckCircle, 
+  CheckCircle2,
+  FileText, 
+  Building2, 
+  Hash, 
+  Send, 
+  X, 
+  Bell, 
+  HelpCircle,
+  Download,
+  ShieldCheck,
+  Search,
+  Users,
+  Sparkles,
+  Layers
+} from 'lucide-react';
 import { StatCard } from '../../components/charts/StatCard';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useCollegeData } from '../../hooks/useCollegeData';
+import { useQueries } from '../../hooks/useQueries';
+import { downloadStandardCsvTemplate } from '../../utils/csvTemplate';
+import { CrossVerificationResult } from '../../services/collegeStudentService';
 import toast from 'react-hot-toast';
 
 export default function CollegeDashboard() {
   const { user } = useAuth();
-  const collegeName = user?.institutionName || 'National Institute of Technology & Engineering';
-  const collegeCode = user?.aisheCode || 'C-16622';
+  const collegeCode = user?.aisheCode || 'C-18491';
   const { sendNotification } = useNotifications('COLLEGE_NODAL', collegeCode);
+  const { collegeDetails, students, batches, crossVerify } = useCollegeData(collegeCode);
+  const { queries } = useQueries();
 
   const [showNoticeModal, setShowNoticeModal] = useState(false);
   const [targetAudience, setTargetAudience] = useState<'MODERATOR' | 'STUDENT'>('MODERATOR');
   const [noticeTitle, setNoticeTitle] = useState('Admission Batch Verification Completed');
   const [noticeMessage, setNoticeMessage] = useState('College administration has completed preliminary document audits for current admissions cycle.');
+
+  // Quick APAAR Cross-Verification Widget State
+  const [verifyApaarInput, setVerifyApaarInput] = useState('');
+  const [verifyNameInput, setVerifyNameInput] = useState('');
+  const [quickVerifyResult, setQuickVerifyResult] = useState<CrossVerificationResult | null>(null);
+
+  const collegeName = collegeDetails.name;
+
+  // Student queries matching this college
+  const collegePendingQueries = queries.filter(
+    (q) =>
+      ((q.aisheCode && q.aisheCode.toUpperCase() === collegeCode.toUpperCase()) ||
+        q.institution.toLowerCase().includes(collegeName.toLowerCase()) ||
+        collegeName.toLowerCase().includes(q.institution.toLowerCase())) &&
+      q.status !== 'RESOLVED'
+  );
+
+  const handleQuickVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyApaarInput.trim()) {
+      toast.error('Please enter a 12-digit APAAR ID');
+      return;
+    }
+
+    const res = crossVerify(verifyApaarInput, verifyNameInput);
+    setQuickVerifyResult(res);
+    if (res.isVerified) {
+      toast.success(`Verified: APAAR ID exists in ${collegeDetails.shortName} uploaded bulk list!`);
+    } else {
+      toast.error(res.message);
+    }
+  };
 
   const handleSendCollegeNotice = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,31 +97,40 @@ export default function CollegeDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Top Banner with College Details */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">College Administration Portal</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{collegeName}</h1>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-mono font-bold">
               <Hash className="w-3 h-3" />
               <span>AISHE: {collegeCode}</span>
             </span>
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">{collegeName}</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            {collegeDetails.affiliation} • {collegeDetails.city}, {collegeDetails.state}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          <button
+            onClick={() => downloadStandardCsvTemplate(collegeCode, collegeDetails.shortName)}
+            className="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-blue-600" />
+            <span>Standard CSV Template</span>
+          </button>
           <Link
             to="/college/queries"
-            className="inline-flex items-center gap-1.5 bg-white border border-blue-200 text-blue-800 hover:bg-blue-50 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition"
+            className="inline-flex items-center gap-1.5 bg-white border border-blue-200 text-blue-800 hover:bg-blue-50 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition relative"
           >
             <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
             <span>Grievances & Queries</span>
+            {collegePendingQueries.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black">
+                {collegePendingQueries.length}
+              </span>
+            )}
           </Link>
-          <button
-            onClick={() => setShowNoticeModal(true)}
-            className="inline-flex items-center gap-2 bg-purple-700 hover:bg-purple-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5" /> Send Info to Moderator / Students
-          </button>
           <Link
             to="/college/students/new"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition"
@@ -74,7 +139,7 @@ export default function CollegeDashboard() {
           </Link>
           <Link
             to="/college/upload"
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xs transition"
+            className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xs transition"
           >
             <UploadCloud className="w-3.5 h-3.5" /> Bulk Upload CSV
           </Link>
@@ -160,13 +225,13 @@ export default function CollegeDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowNoticeModal(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send Notification Pop-up</span>
@@ -177,11 +242,145 @@ export default function CollegeDashboard() {
         </div>
       )}
 
+      {/* College Statistics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Approved Intake (2024-25)" value="2,400" change="AICTE Approved" icon={CheckCircle} color="blue" />
-        <StatCard title="Total Enrolled" value="2,280" change="95% Utilization" icon={FileText} color="emerald" />
-        <StatCard title="Pending Validation" value="48" change="In BullMQ worker queue" icon={UploadCloud} color="amber" />
-        <StatCard title="Flagged Anomalies" value="12" change="Requires Correction" icon={AlertTriangle} color="rose" />
+        <StatCard
+          title="Sanctioned Intake"
+          value={collegeDetails.sanctionedIntake.toLocaleString()}
+          change={`Approved by ${collegeDetails.affiliation.split('(')[0].trim()}`}
+          icon={CheckCircle}
+          color="blue"
+        />
+        <StatCard
+          title="Active Student File Set"
+          value={`${students.length} Students`}
+          change={`${batches.length} Batches Ingested`}
+          icon={FileText}
+          color="emerald"
+        />
+        <StatCard
+          title="Student Queries"
+          value={`${collegePendingQueries.length} Pending`}
+          change={`${queries.length} Total System Queries`}
+          icon={HelpCircle}
+          color="amber"
+        />
+        <StatCard
+          title="Uploaded Batches"
+          value={`${batches.length} Files`}
+          change="Automated Verhoeff Verifier"
+          icon={UploadCloud}
+          color="blue"
+        />
+      </div>
+
+      {/* Interactive APAAR Cross-Verification Card */}
+      <div className="p-6 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-3xl text-white shadow-lg border border-blue-800/40 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-400/30">
+              <ShieldCheck className="w-5 h-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-white">
+                Live APAAR ID Cross-Verification against {collegeDetails.shortName} Bulk List
+              </h2>
+              <p className="text-xs text-slate-300">
+                Instantly check if a student's APAAR ID is verified in this college's uploaded bulk records ({students.length} students)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/upload"
+              className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-sm transition flex items-center gap-1.5"
+            >
+              <span>Full Verification Desk</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick Cross-Verification Form */}
+        <form onSubmit={handleQuickVerify} className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div>
+            <input
+              type="text"
+              placeholder="Enter 12-digit APAAR ID (e.g. 9842-1083-4912)"
+              value={verifyApaarInput}
+              onChange={(e) => setVerifyApaarInput(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              placeholder="Optional Student Name (e.g. Rohan Sundaram)"
+              value={verifyNameInput}
+              onChange={(e) => setVerifyNameInput(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <button
+              type="submit"
+              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            >
+              <Search className="w-4 h-4" />
+              <span>Cross-Verify Against Bulk Roster</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Quick Sample Students from this College */}
+        <div className="flex flex-wrap items-center gap-2 text-xs pt-1">
+          <span className="text-slate-400 text-[11px]">Quick test samples from {collegeDetails.shortName}:</span>
+          {students.slice(0, 3).map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                setVerifyApaarInput(s.apaarId);
+                setVerifyNameInput(s.name);
+                const res = crossVerify(s.apaarId, s.name);
+                setQuickVerifyResult(res);
+              }}
+              className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] font-mono text-blue-200 transition cursor-pointer"
+            >
+              {s.name} ({s.apaarId})
+            </button>
+          ))}
+        </div>
+
+        {/* Cross-Verification Result Display */}
+        {quickVerifyResult && (
+          <div
+            className={`p-4 rounded-2xl border text-xs space-y-2 animate-in fade-in ${
+              quickVerifyResult.status === 'VERIFIED_MATCH'
+                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
+                : quickVerifyResult.status === 'WRONG_COLLEGE_ROSTER'
+                ? 'bg-rose-950/60 border-rose-500/40 text-rose-200'
+                : 'bg-amber-950/60 border-amber-500/40 text-amber-200'
+            }`}
+          >
+            <div className="flex items-center gap-2 font-bold text-sm">
+              {quickVerifyResult.isVerified ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              )}
+              <span>{quickVerifyResult.message}</span>
+            </div>
+            {quickVerifyResult.matchedRecord && (
+              <div className="font-mono text-[11px] text-slate-300 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-white/10">
+                <div>Name: <span className="text-white font-bold">{quickVerifyResult.matchedRecord.name}</span></div>
+                <div>Roll #: <span className="text-white font-bold">{quickVerifyResult.matchedRecord.rollNo}</span></div>
+                <div>Programme: <span className="text-white font-bold">{quickVerifyResult.matchedRecord.programmeId}</span></div>
+                <div>Batch: <span className="text-blue-300 font-bold">{quickVerifyResult.matchedRecord.batchId || 'Master Roster'}</span></div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Statutory Directives & AICTE Intake Notices from Moderator */}
@@ -250,7 +449,7 @@ export default function CollegeDashboard() {
                           });
                           toast.success(`Compliance acknowledgment dispatched to AICTE Moderator for ${n.noticeRef}!`);
                         }}
-                        className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1.5"
+                        className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
                       >
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span>Acknowledge & Submit Response to Moderator</span>
@@ -266,20 +465,34 @@ export default function CollegeDashboard() {
         }
       })()}
 
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <h2 className="text-base font-semibold text-slate-900 mb-4">Quick Batch Actions & Guidelines</h2>
-        <div className="grid md:grid-cols-3 gap-4 text-sm">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h3 className="font-semibold text-blue-900 mb-1">APAAR Format Requirements</h3>
-            <p className="text-blue-700 text-xs">Ensure 12-digit APAAR numbers are formatted with Verhoeff/Luhn checksum validation.</p>
+      {/* Guidelines and Standards Card */}
+      <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4">
+        <div className="flex items-center justify-between border-b pb-3">
+          <h2 className="text-base font-bold text-slate-900">
+            College Ingestion Guidelines & Verification Rules
+          </h2>
+          <span className="text-xs text-blue-700 font-bold">
+            AISHE: {collegeCode}
+          </span>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 text-xs">
+          <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-100 space-y-1">
+            <h3 className="font-bold text-blue-900">Dedicated College Student File Sets</h3>
+            <p className="text-blue-700 leading-relaxed">
+              Every college maintains its own distinct student roster. Bulk CSV ingestion saves directly to {collegeDetails.shortName}'s verified database.
+            </p>
           </div>
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
-            <h3 className="font-semibold text-amber-900 mb-1">Intake Capping Alert</h3>
-            <p className="text-amber-700 text-xs">B.Tech Computer Engineering is at 98% of sanctioned capacity (705/720).</p>
+          <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-100 space-y-1">
+            <h3 className="font-bold text-emerald-900">Standard CSV Column Formatting</h3>
+            <p className="text-emerald-700 leading-relaxed">
+              Ensure CSV files include exact standard headers: <code>name,apaarId,dateOfBirth,gender,guardianName,email,contactPhone,programmeId,enrollmentYear,rollNo,aisheCode</code>.
+            </p>
           </div>
-          <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
-            <h3 className="font-semibold text-emerald-900 mb-1">Automated Resolution</h3>
-            <p className="text-emerald-700 text-xs">Fuzzy-matched duplicates within 2% string edit distance are highlighted for review.</p>
+          <div className="p-4 bg-purple-50/70 rounded-xl border border-purple-100 space-y-1">
+            <h3 className="font-bold text-purple-900">Real-Time Grievance Redressal</h3>
+            <p className="text-purple-700 leading-relaxed">
+              Student inquiries directed to {collegeCode} sync across tabs instantly. Resolving queries updates the student's status in real-time.
+            </p>
           </div>
         </div>
       </div>

@@ -17,10 +17,12 @@ import {
   Download,
   Share2,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useQueries } from '../../hooks/useQueries';
+import { useCollegeData } from '../../hooks/useCollegeData';
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -32,12 +34,20 @@ export default function StudentDashboard() {
   const studentName = user?.name || 'Rohan Sundaram';
   const apaarId = user?.apaarId || '9842-1083-4912';
   const rollNo = user?.rollNo || 'EEC2024CS042';
-  const institution = user?.institutionName || 'Easwari Engineering College (EEC)';
+  const collegeCode = user?.aisheCode || 'C-18491';
+  const institution = user?.institutionName || 'Easwari Engineering College';
   const programme = user?.department || 'B.E. Computer Science and Engineering';
 
+  // Cross-verification with College's uploaded bulk student records
+  const { collegeDetails, crossVerify } = useCollegeData(collegeCode);
+  const verificationResult = crossVerify(apaarId, studentName, rollNo);
+
   // Filter queries belonging to this student
+  const cleanApaar = apaarId.replace(/[^0-9]/g, '');
   const studentQueries = queries.filter(
-    (q) => q.apaarId === apaarId || q.studentName.toLowerCase() === studentName.toLowerCase()
+    (q) =>
+      q.apaarId.replace(/[^0-9]/g, '') === cleanApaar ||
+      q.studentName.toLowerCase() === studentName.toLowerCase()
   );
 
   const handleCopyApaar = () => {
@@ -56,6 +66,7 @@ export default function StudentDashboard() {
 
 APAAR ID (12-Digit):   ${apaarId}
 Verification Protocol:  Verhoeff Algorithm Verified • SHA-256 Checksum Valid
+College Cross-Check:    ${verificationResult.isVerified ? `VERIFIED against ${collegeDetails.name} Bulk Ingestion List` : 'Pending Bulk Ingestion Sync'}
 Issuing Authority:      AICTE & National Academic Depository (NAD)
 
 STUDENT BIOGRAPHICAL PARTICULARS:
@@ -67,7 +78,7 @@ Guardian Name:          ${user?.fatherName || 'Sundaram Krishnamurthy'}
 
 ACADEMIC PARTICULARS:
 Accredited Institution: ${institution}
-AISHE Code:             ${user?.aisheCode || 'C-16622'}
+AISHE Code:             ${collegeCode}
 Degree & Programme:     ${programme}
 Enrolment / Roll No:    ${rollNo}
 Academic Period:        2024 - 2028
@@ -101,33 +112,84 @@ recognized across all universities, technical boards, and employers in India.
             Welcome, {studentName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300">
-            {programme} • {institution} (AISHE: {user?.aisheCode || 'C-16622'})
+            {programme} • {institution} (AISHE: {collegeCode})
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => navigate('/student/details')}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2 cursor-pointer"
           >
             <GraduationCap className="w-4 h-4" />
             <span>Fill Up / Edit My Details</span>
           </button>
           <button
             onClick={() => navigate('/student/queries')}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-sm transition flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-sm transition flex items-center gap-2 cursor-pointer"
           >
             <HelpCircle className="w-4 h-4 text-emerald-300" />
             <span>Raise Grievance</span>
           </button>
           <button
             onClick={handleDownloadApaarCard}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>Download APAAR Card</span>
           </button>
         </div>
+      </div>
+
+      {/* College Bulk Roster Cross-Verification Seal Banner */}
+      <div
+        className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+          verificationResult.isVerified
+            ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
+            : 'bg-amber-50 border-amber-300 text-amber-950'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-xl shrink-0 ${
+              verificationResult.isVerified
+                ? 'bg-emerald-600 text-white'
+                : 'bg-amber-500 text-white'
+            }`}
+          >
+            {verificationResult.isVerified ? (
+              <CheckCircle2 className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
+            )}
+          </div>
+          <div>
+            <div className="font-bold text-xs flex items-center gap-2">
+              <span>College Bulk Ingestion Cross-Verification:</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                  verificationResult.isVerified
+                    ? 'bg-emerald-200 text-emerald-900'
+                    : 'bg-amber-200 text-amber-900'
+                }`}
+              >
+                {verificationResult.isVerified ? 'VERIFIED MATCH' : 'NOT FOUND IN COLLEGE ROSTER'}
+              </span>
+            </div>
+            <p className="text-xs mt-0.5 text-slate-700">
+              {verificationResult.isVerified
+                ? `Cross-verified with ${collegeDetails.name} (${collegeCode}) uploaded student file set. Batch: ${verificationResult.matchedRecord?.batchId || 'Admissions Master Roster'}.`
+                : `Student APAAR record (${apaarId}) has not yet been matched in ${collegeDetails.shortName}'s uploaded bulk list.`}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate('/upload')}
+          className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 transition shrink-0 cursor-pointer"
+        >
+          Verify Details
+        </button>
       </div>
 
       {/* Profile Completion Prompt if details are not yet completed */}
@@ -146,7 +208,7 @@ recognized across all universities, technical boards, and employers in India.
           </div>
           <button
             onClick={() => navigate('/student/details')}
-            className="px-4 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto"
+            className="px-4 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
             <span>Fill Details Now</span>
             <ChevronRight className="w-4 h-4" />
@@ -267,7 +329,7 @@ recognized across all universities, technical boards, and employers in India.
                     </span>
                     <button
                       onClick={handleCopyApaar}
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition active:scale-95"
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition active:scale-95 cursor-pointer"
                       title="Copy APAAR ID"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -278,10 +340,11 @@ recognized across all universities, technical boards, and employers in India.
             </div>
 
             {/* Card Footer Bar */}
-            <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-              <span>AISHE: {user?.aisheCode || 'C-16622'} • {user?.institutionName || 'Affiliated Higher Education Institution'}</span>
+            <div className="mt-5 pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-slate-400 font-mono">
+              <span>AISHE: {collegeCode} • {collegeDetails.name}</span>
               <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                <ShieldCheck className="w-3 h-3" /> Verhoeff Checksum Valid
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>{verificationResult.isVerified ? 'Bulk List Cross-Verified' : 'Verhoeff Checksum Valid'}</span>
               </span>
             </div>
           </div>
@@ -317,7 +380,6 @@ recognized across all universities, technical boards, and employers in India.
               </div>
             </div>
 
-
             {/* Grievance Queries Status */}
             <div className="pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3">
@@ -326,7 +388,7 @@ recognized across all universities, technical boards, and employers in India.
                 </h4>
                 <button
                   onClick={() => navigate('/student/queries')}
-                  className="text-xs font-bold text-purple-700 hover:underline"
+                  className="text-xs font-bold text-purple-700 hover:underline cursor-pointer"
                 >
                   Manage All
                 </button>
@@ -359,7 +421,7 @@ recognized across all universities, technical boards, and employers in India.
                       <p className="text-xs text-slate-800 font-medium truncate">{q.subject}</p>
                       {q.moderatorNotes && (
                         <p className="text-[11px] text-emerald-700 font-medium mt-1 truncate">
-                          💬 Moderator: {q.moderatorNotes}
+                          💬 Resolution: {q.moderatorNotes}
                         </p>
                       )}
                     </div>

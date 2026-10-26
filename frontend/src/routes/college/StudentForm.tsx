@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Building2,
   UserPlus,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
+import { getCollegeStudents, saveCollegeStudents } from '../../services/collegeStudentService';
 import toast from 'react-hot-toast';
 
 export default function StudentForm() {
@@ -97,6 +98,7 @@ export default function StudentForm() {
         quota: formData.admissionQuota
       });
 
+      // Save to general registered students
       try {
         const saved = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
         saved.push({
@@ -118,6 +120,31 @@ export default function StudentForm() {
         });
         localStorage.setItem('apaar_registered_students', JSON.stringify(saved));
       } catch {}
+
+      // Save into this specific college's separate student file set
+      try {
+        const currentCollegeRoster = getCollegeStudents(collegeCode);
+        currentCollegeRoster.push({
+          id: `STU-${collegeCode}-${Math.floor(100 + Math.random() * 900)}`,
+          name: formData.name,
+          apaarId: generatedApaar,
+          dateOfBirth: formData.dob || '2004-03-12',
+          gender: (['male', 'female', 'other'].includes(String(formData.gender).toLowerCase()) ? formData.gender : 'male') as any,
+          guardianName: formData.guardianName || 'Guardian',
+          email: formData.email,
+          contactPhone: formData.contactPhone || '9876543210',
+          programmeId: formData.degree || 'BTECH-CSE',
+          enrollmentYear: formData.admissionYear || '2024',
+          rollNo: formData.rollNo,
+          aisheCode: collegeCode,
+          status: 'VERIFIED',
+          batchId: 'direct_admission_desk',
+          uploadedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+        });
+        saveCollegeStudents(collegeCode, currentCollegeRoster);
+      } catch (err) {
+        console.error('Failed to update college student file set:', err);
+      }
 
       // 1. Notify Moderator of new college admission and quota intake update
       sendNotification({
