@@ -208,6 +208,33 @@ export function useAuth() {
       localStorage.setItem('apaar_registered_students', JSON.stringify(filtered));
     } catch {}
 
+    // Synchronize username and college in student queries
+    if (updates.name || updates.institutionName) {
+      try {
+        const savedQueries = JSON.parse(localStorage.getItem('apaar_queries') || '[]');
+        let queriesChanged = false;
+        const updatedQueries = savedQueries.map((q: any) => {
+          const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
+          const cleanUserApaar = String(updated.apaarId || '').replace(/[^0-9]/g, '');
+          if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
+            queriesChanged = true;
+            return {
+              ...q,
+              studentName: updated.name,
+              institution: updated.institutionName ? `${updated.institutionName} (${updated.aisheCode || ''})` : q.institution,
+              aisheCode: updated.aisheCode || q.aisheCode,
+              description: updates.name ? q.description.replace(/Rohan Sundaram/g, updates.name) : q.description
+            };
+          }
+          return q;
+        });
+        if (queriesChanged) {
+          localStorage.setItem('apaar_queries', JSON.stringify(updatedQueries));
+          window.dispatchEvent(new CustomEvent('apaar_queries_updated'));
+        }
+      } catch {}
+    }
+
     return updated;
   };
 

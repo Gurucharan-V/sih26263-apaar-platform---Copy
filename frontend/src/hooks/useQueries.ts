@@ -84,7 +84,35 @@ export function useQueries() {
   const loadSaved = useCallback((): StudentQuery[] => {
     try {
       const saved = localStorage.getItem('apaar_queries');
-      return saved ? JSON.parse(saved) : DEFAULT_QUERIES;
+      let parsed: StudentQuery[] = saved ? JSON.parse(saved) : DEFAULT_QUERIES;
+
+      // Sync active student's name if logged in
+      try {
+        const authData = localStorage.getItem('apaar_auth');
+        if (authData) {
+          const authUser = JSON.parse(authData);
+          if (authUser?.name && authUser.role === 'STUDENT') {
+            const cleanUserApaar = String(authUser.apaarId || '').replace(/[^0-9]/g, '');
+            parsed = parsed.map((q: StudentQuery) => {
+              const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
+              if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
+                return {
+                  ...q,
+                  studentName: authUser.name,
+                  institution: authUser.institutionName
+                    ? `${authUser.institutionName} (${authUser.aisheCode || 'C-18491'})`
+                    : q.institution,
+                  aisheCode: authUser.aisheCode || q.aisheCode,
+                  description: q.description.replace(/Rohan Sundaram/g, authUser.name)
+                };
+              }
+              return q;
+            });
+          }
+        }
+      } catch {}
+
+      return parsed;
     } catch {
       return DEFAULT_QUERIES;
     }
@@ -96,10 +124,10 @@ export function useQueries() {
     setQueries(loadSaved());
   }, [loadSaved]);
 
-  // Sync across tabs and custom events
+  // Sync across tabs, query updates, and auth profile changes
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'apaar_queries') {
+      if (e.key === 'apaar_queries' || e.key === 'apaar_auth') {
         refreshQueries();
       }
     };
@@ -110,10 +138,12 @@ export function useQueries() {
 
     window.addEventListener('storage', handleStorage);
     window.addEventListener('apaar_queries_updated', handleCustomSync);
+    window.addEventListener('apaar_auth_sync', handleCustomSync);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('apaar_queries_updated', handleCustomSync);
+      window.removeEventListener('apaar_auth_sync', handleCustomSync);
     };
   }, [refreshQueries]);
 

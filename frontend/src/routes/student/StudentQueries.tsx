@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   HelpCircle, 
   Plus, 
@@ -11,7 +12,8 @@ import {
   FileText,
   User,
   Building2,
-  Hash
+  Hash,
+  Edit3
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useQueries, StudentQuery } from '../../hooks/useQueries';
@@ -21,6 +23,7 @@ import toast from 'react-hot-toast';
 
 export default function StudentQueries() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { queries, addQuery } = useQueries();
   const studentCollegeCode = user?.aisheCode || 'C-18491';
   const { sendNotification } = useNotifications('STUDENT', studentCollegeCode, user?.apaarId);
@@ -103,7 +106,7 @@ export default function StudentQueries() {
       setSubject('');
       setDescription('');
       toast.success(`Query submitted to ${targetInstitutionName}! Updated in real-time on College & Moderator Portals.`);
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -122,6 +125,23 @@ export default function StudentQueries() {
           <p className="text-sm text-slate-500 mt-1">
             Submit questions or corrections regarding your APAAR ID, academic records, or ABC credits directly to your college nodal officer.
           </p>
+
+          {/* Active Student Username Badge */}
+          <div className="flex items-center gap-2 mt-2.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 text-xs font-semibold">
+              <User className="w-3.5 h-3.5 text-purple-600" />
+              <span>Student: <strong className="font-bold text-purple-950">{user?.name || studentName}</strong></span>
+              <span className="text-purple-400">•</span>
+              <span className="font-mono text-purple-700 text-[11px]">{apaarId}</span>
+            </div>
+            <button
+              onClick={() => navigate('/student/details')}
+              className="text-xs text-purple-700 hover:text-purple-900 hover:underline font-bold flex items-center gap-1 transition cursor-pointer"
+            >
+              <Edit3 className="w-3 h-3" />
+              <span>Edit Name</span>
+            </button>
+          </div>
         </div>
 
         <button
@@ -310,18 +330,26 @@ export default function StudentQueries() {
                 </div>
               </div>
 
-              <div className="text-xs text-slate-500 flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                <span className="font-medium text-slate-700">{q.institution}</span>
-                {q.aisheCode && (
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono">
-                    AISHE: {q.aisheCode}
-                  </span>
-                )}
+              <div className="text-xs text-slate-500 flex flex-wrap items-center gap-2.5">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-purple-50 text-purple-900 font-bold text-xs border border-purple-200/60">
+                  <User className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Student: {user?.name || q.studentName}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-600">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-medium text-slate-700">{q.institution}</span>
+                  {q.aisheCode && (
+                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono">
+                      AISHE: {q.aisheCode}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
-                {q.description}
+                {user?.name && user.name !== 'Rohan Sundaram'
+                  ? q.description.replace(/Rohan Sundaram/g, user.name)
+                  : q.description}
               </p>
 
               {/* College / Moderator Response Callout */}
