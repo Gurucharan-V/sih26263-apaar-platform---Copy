@@ -111,8 +111,8 @@ export function useAuth() {
       };
     } else {
       // College login with unique college code
-      const selectedAishe = collegeCustomCode || 'C-16622';
-      const selectedName = collegeCustomName || 'National Institute of Technology & Engineering';
+      const selectedAishe = collegeCustomCode || 'C-18491';
+      const selectedName = collegeCustomName || 'Easwari Engineering College';
 
       mockUser = {
         email: emailOrId.includes('@') ? emailOrId : 'nodal@college.ac.in',

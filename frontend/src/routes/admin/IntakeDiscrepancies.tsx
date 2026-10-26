@@ -16,7 +16,7 @@ interface DiscrepancyItem {
 }
 
 const INITIAL_DISCREPANCIES: DiscrepancyItem[] = [
-  { id: 'INC-101', institution: 'Delhi Technological University', collegeCode: 'C-18491', programme: 'B.Tech IT', approved: 120, enrolled: 142, delta: '+22 (+18.3%)', flag: 'High Over-Intake', state: 'Delhi' },
+  { id: 'INC-101', institution: 'Delhi Technological University', collegeCode: 'C-41209', programme: 'B.Tech IT', approved: 120, enrolled: 142, delta: '+22 (+18.3%)', flag: 'High Over-Intake', state: 'Delhi' },
   { id: 'INC-102', institution: 'Bengal College of Engineering', collegeCode: 'C-44109', programme: 'B.Tech CSE', approved: 180, enrolled: 222, delta: '+42 (+23.3%)', flag: 'High Over-Intake', state: 'West Bengal' },
   { id: 'INC-103', institution: 'St. Mary Technical Institute', collegeCode: 'C-53104', programme: 'MBA Fin', approved: 60, enrolled: 72, delta: '+12 (+20.0%)', flag: 'Moderate Over-Intake', state: 'Karnataka' },
   { id: 'INC-104', institution: 'Apex Institute of Science & Technology', collegeCode: 'C-62840', programme: 'B.Tech AI & Data', approved: 60, enrolled: 78, delta: '+18 (+30.0%)', flag: 'Severe Over-Intake', state: 'Maharashtra' }

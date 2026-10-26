@@ -26,7 +26,6 @@ export const Sidebar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'mode
     { to: '/student', label: 'APAAR Digital Card', icon: CreditCard, end: true },
     { to: '/student/details', label: 'Fill / Edit Details', icon: GraduationCap },
     { to: '/student/credits', label: 'Academic Bank of Credits', icon: Award },
-    { to: '/student/documents', label: 'DigiLocker Records', icon: FileCheck2 },
     { to: '/student/queries', label: 'Grievance & Queries', icon: HelpCircle },
   ];
 
@@ -35,6 +34,7 @@ export const Sidebar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'mode
     { to: '/college/students/new', label: 'Register Student (College Side)', icon: UserPlus },
     { to: '/college/upload', label: t('nav.bulkUpload', 'Bulk Ingestion'), icon: UploadCloud },
     { to: '/college/history', label: t('nav.uploadHistory', 'Upload History'), icon: History },
+    { to: '/college/queries', label: 'Grievance & Queries', icon: HelpCircle },
   ];
 
   const adminLinks = [

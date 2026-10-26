@@ -52,7 +52,7 @@ export default function StudentCredits() {
         <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-xs text-slate-400 font-medium">National ABC ID</span>
           <div className="text-xl font-mono font-bold text-slate-800 mt-1">ABC-984210834912</div>
-          <span className="text-[11px] text-blue-600 font-medium mt-1 block">Linked to DigiLocker</span>
+          <span className="text-[11px] text-emerald-600 font-medium mt-1 block">Authenticated National ABC Registry</span>
         </div>
         <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-xs text-slate-400 font-medium">Credit Transfer Scheme</span>

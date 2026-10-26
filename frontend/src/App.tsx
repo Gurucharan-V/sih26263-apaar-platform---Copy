@@ -19,6 +19,7 @@ import StudentForm from './routes/college/StudentForm';
 import BulkUpload from './routes/college/BulkUpload';
 import ValidationErrors from './routes/college/ValidationErrors';
 import UploadHistory from './routes/college/UploadHistory';
+import CollegeQueries from './routes/college/CollegeQueries';
 
 // Moderator / Admin Portal Routes
 import AdminDashboard from './routes/admin/AdminDashboard';
@@ -51,7 +52,7 @@ export default function App() {
         <Route path="details" element={<StudentDetailsForm />} />
         <Route path="queries" element={<StudentQueries />} />
         <Route path="credits" element={<StudentCredits />} />
-        <Route path="documents" element={<StudentDocuments />} />
+        <Route path="documents" element={<Navigate to="/student" replace />} />
       </Route>
 
       {/* 2. College Portal Layout */}
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="upload" element={<BulkUpload />} />
         <Route path="upload/errors/:uploadId" element={<ValidationErrors />} />
         <Route path="history" element={<UploadHistory />} />
+        <Route path="queries" element={<CollegeQueries />} />
       </Route>
 
       {/* 3. Moderator / Admin Portal Layout */}

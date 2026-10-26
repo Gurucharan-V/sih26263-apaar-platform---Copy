@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, UserPlus, AlertTriangle, CheckCircle, FileText, Building2, Hash, Send, X, Bell } from 'lucide-react';
+import { UploadCloud, UserPlus, AlertTriangle, CheckCircle, FileText, Building2, Hash, Send, X, Bell, HelpCircle } from 'lucide-react';
 import { StatCard } from '../../components/charts/StatCard';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -53,6 +53,13 @@ export default function CollegeDashboard() {
           <p className="text-sm text-slate-500 mt-0.5">{collegeName}</p>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          <Link
+            to="/college/queries"
+            className="inline-flex items-center gap-1.5 bg-white border border-blue-200 text-blue-800 hover:bg-blue-50 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+            <span>Grievances & Queries</span>
+          </Link>
           <button
             onClick={() => setShowNoticeModal(true)}
             className="inline-flex items-center gap-2 bg-purple-700 hover:bg-purple-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"

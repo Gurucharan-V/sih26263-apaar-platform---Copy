@@ -95,7 +95,7 @@ recognized across all universities, technical boards, and employers in India.
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>AICTE & DigiLocker Verified Student Record</span>
+            <span>AICTE Authenticated Student Record</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             Welcome, {studentName}
@@ -317,22 +317,6 @@ recognized across all universities, technical boards, and employers in India.
               </div>
             </div>
 
-            {/* Digilocker Sync Badge */}
-            <div className="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2.5">
-                <FileCheck2 className="w-5 h-5 text-blue-600" />
-                <div>
-                  <div className="font-bold text-blue-950">DigiLocker Synced</div>
-                  <div className="text-[11px] text-blue-700">4 Certificates Verified</div>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/student/documents')}
-                className="text-blue-700 font-bold hover:underline inline-flex items-center gap-0.5"
-              >
-                View <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
 
             {/* Grievance Queries Status */}
             <div className="pt-2 border-t border-slate-100">

@@ -22,7 +22,9 @@ import {
   Check,
   Award,
   Hash,
-  School
+  School,
+  Copy,
+  ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/Button';
@@ -35,11 +37,15 @@ import toast from 'react-hot-toast';
 export type PortalType = 'student' | 'college' | 'moderator';
 
 export const ACCREDITED_COLLEGES = [
+  { code: 'C-18491', name: 'Easwari Engineering College' },
   { code: 'C-16622', name: 'Chennai Institute of Technology & Engineering' },
   { code: 'C-24891', name: 'National Institute of Technology (NIT Trichy)' },
-  { code: 'C-41209', name: 'Delhi College of Engineering & Research' },
+  { code: 'C-41209', name: 'Delhi Technological University' },
   { code: 'C-53104', name: 'Bangalore Technological University' },
-  { code: 'C-62840', name: 'Apex Institute of Science & Technology' }
+  { code: 'C-62840', name: 'Apex Institute of Science & Technology' },
+  { code: 'C-36965', name: 'Vellore Institute of Technology' },
+  { code: 'C-09122', name: 'Pune Institute of Computer Technology' },
+  { code: 'C-44109', name: 'Bengal College of Engineering' }
 ];
 
 export default function Login({ defaultPortal }: { defaultPortal?: PortalType }) {
@@ -66,9 +72,31 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
 
   // College-specific state for unique code
-  const [selectedCollegeCode, setSelectedCollegeCode] = useState('C-16622');
-  const [customCollegeCode, setCustomCollegeCode] = useState('');
-  const [isCustomCollege, setIsCustomCollege] = useState(false);
+  const [selectedCollegeCode, setSelectedCollegeCode] = useState('C-18491');
+  const [collegeInputCode, setCollegeInputCode] = useState('C-18491');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopyCode = (code: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    toast.success(`Copied college code "${code}" to clipboard!`);
+    setTimeout(() => setCopiedCode(null), 2500);
+  };
+
+  const filteredColleges = ACCREDITED_COLLEGES.filter((col) => {
+    const q = collegeInputCode.trim().toLowerCase();
+    if (!q) return true;
+    return col.code.toLowerCase().includes(q) || col.name.toLowerCase().includes(q);
+  });
+
+  const activeCollege = ACCREDITED_COLLEGES.find(
+    (c) => c.code.toLowerCase() === (collegeInputCode || selectedCollegeCode).trim().toLowerCase()
+  );
 
   // Sync state if URL changes
   useEffect(() => {
@@ -143,8 +171,8 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
     setTimeout(async () => {
       try {
-        const finalCollegeCode = isCustomCollege ? (customCollegeCode || 'C-CUSTOM') : selectedCollegeCode;
-        const matchingCollege = ACCREDITED_COLLEGES.find((c) => c.code === finalCollegeCode);
+        const finalCollegeCode = (collegeInputCode || selectedCollegeCode).trim().toUpperCase();
+        const matchingCollege = ACCREDITED_COLLEGES.find((c) => c.code.toLowerCase() === finalCollegeCode.toLowerCase());
         const finalCollegeName = matchingCollege ? matchingCollege.name : 'Affiliated Higher Education Institution';
 
         await login(identifier, password, activePortal, finalCollegeCode, finalCollegeName);
@@ -430,42 +458,164 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* For College Portal: Select or Enter Unique College Code */}
+                {/* For College Portal: Select or Enter Unique College Code with Dropdown & Copy */}
                 {activePortal === 'college' && (
-                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2.5">
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2.5 relative">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-bold text-blue-950 uppercase tracking-wide">
                         College Unique Code (AISHE Code) <span className="text-rose-500">*</span>
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsCustomCollege(!isCustomCollege)}
-                        className="text-[11px] font-bold text-blue-700 hover:underline"
-                      >
-                        {isCustomCollege ? 'Select from list' : 'Enter other code'}
-                      </button>
+                      <span className="text-[11px] text-blue-700 font-medium">
+                        Type or pick code to copy
+                      </span>
                     </div>
 
-                    {!isCustomCollege ? (
-                      <select
-                        value={selectedCollegeCode}
-                        onChange={(e) => setSelectedCollegeCode(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-blue-300 text-xs font-semibold bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20"
-                      >
-                        {ACCREDITED_COLLEGES.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.code} — {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        placeholder="e.g. C-16622 or U-0456"
-                        value={customCollegeCode}
-                        onChange={(e) => setCustomCollegeCode(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-blue-300 text-xs font-mono font-bold bg-white text-blue-900 focus:ring-2 focus:ring-blue-500/20"
-                      />
+                    {/* Interactive Code Input with Dropdown Button & Copy Button */}
+                    <div className="relative">
+                      <div className="flex items-center">
+                        <input
+                          type="text"
+                          value={collegeInputCode}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCollegeInputCode(val);
+                            setIsDropdownOpen(true);
+                            const match = ACCREDITED_COLLEGES.find(
+                              (c) => c.code.toLowerCase() === val.trim().toLowerCase()
+                            );
+                            if (match) {
+                              setSelectedCollegeCode(match.code);
+                            }
+                          }}
+                          onFocus={() => setIsDropdownOpen(true)}
+                          placeholder="Type or select college code (e.g. C-18491)"
+                          className="w-full pl-3.5 pr-24 py-2.5 rounded-xl border border-blue-300 text-xs font-mono font-bold bg-white text-blue-900 focus:ring-2 focus:ring-blue-500/20 uppercase shadow-xs"
+                        />
+
+                        {/* Action buttons inside input */}
+                        <div className="absolute right-1.5 flex items-center gap-1">
+                          {/* Copy Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyCode(collegeInputCode || selectedCollegeCode, e)}
+                            title="Copy active college code"
+                            className="px-2 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-100 transition flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+                          >
+                            {copiedCode === (collegeInputCode || selectedCollegeCode) ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-700 text-[10px]">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-blue-600" />
+                                <span className="text-[10px] text-blue-800">Copy</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Dropdown Toggle Button */}
+                          <button
+                            type="button"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            title="Toggle college code dropdown"
+                            className="p-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-100 transition cursor-pointer"
+                          >
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-blue-700' : ''}`} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dropdown Menu showing matching colleges with Copy button */}
+                      {isDropdownOpen && (
+                        <div className="absolute z-30 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white rounded-xl border border-blue-200 shadow-xl divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1">
+                          {filteredColleges.length === 0 ? (
+                            <div className="p-3 text-xs text-slate-500">
+                              <div>No accredited college matching "{collegeInputCode}".</div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCollegeCode(collegeInputCode.trim().toUpperCase());
+                                  setIsDropdownOpen(false);
+                                  toast.success(`Selected custom code: ${collegeInputCode.trim().toUpperCase()}`);
+                                }}
+                                className="mt-1.5 text-blue-700 font-bold hover:underline block"
+                              >
+                                Use "{collegeInputCode.trim().toUpperCase()}" as custom code
+                              </button>
+                            </div>
+                          ) : (
+                            filteredColleges.map((col) => {
+                              const isSelected = selectedCollegeCode === col.code;
+                              return (
+                                <div
+                                  key={col.code}
+                                  onClick={() => {
+                                    setSelectedCollegeCode(col.code);
+                                    setCollegeInputCode(col.code);
+                                    setIsDropdownOpen(false);
+                                  }}
+                                  className={`p-2.5 hover:bg-blue-50/80 transition flex items-center justify-between cursor-pointer text-xs ${
+                                    isSelected ? 'bg-blue-50/70 font-semibold' : ''
+                                  }`}
+                                >
+                                  <div className="flex-1 pr-2 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono font-bold text-blue-800 bg-blue-100 px-1.5 py-0.5 rounded text-[11px] shrink-0">
+                                        {col.code}
+                                      </span>
+                                      <span className="font-semibold text-slate-800 text-xs truncate">
+                                        {col.name}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Individual Copy Button in Dropdown */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleCopyCode(col.code, e)}
+                                    title={`Copy ${col.code}`}
+                                    className="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-md text-[10px] font-bold flex items-center gap-1 transition shrink-0"
+                                  >
+                                    {copiedCode === col.code ? (
+                                      <>
+                                        <Check className="w-3 h-3 text-emerald-600" />
+                                        <span className="text-emerald-700">Copied</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="w-3 h-3 text-slate-500" />
+                                        <span>Copy Code</span>
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Matched College Badge Card */}
+                    {activeCollege && (
+                      <div className="p-2.5 bg-white rounded-lg border border-blue-200 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <div className="truncate">
+                            <span className="font-bold text-slate-900">{activeCollege.name}</span>
+                            <span className="text-slate-400 mx-1.5">•</span>
+                            <span className="font-mono text-blue-700 font-bold">{activeCollege.code}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyCode(activeCollege.code, e)}
+                          className="text-[11px] font-bold text-blue-700 hover:underline shrink-0 ml-2 flex items-center gap-0.5"
+                        >
+                          <Copy className="w-3 h-3" /> Copy
+                        </button>
+                      </div>
                     )}
 
                     <p className="text-[10px] text-blue-800">

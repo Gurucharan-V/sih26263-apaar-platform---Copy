@@ -77,7 +77,7 @@ export default function StudentQueries() {
         sender: `Student: ${studentName}`,
         senderRole: 'STUDENT',
         type: 'info',
-        actionUrl: '/college'
+        actionUrl: '/college/queries'
       });
 
       setIsSubmitting(false);
@@ -102,7 +102,7 @@ export default function StudentQueries() {
             </h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Submit questions or corrections regarding your APAAR ID, DigiLocker certificates, or ABC credits.
+            Submit questions or corrections regarding your APAAR ID, academic records, or ABC credits.
           </p>
         </div>
 
@@ -142,7 +142,6 @@ export default function StudentQueries() {
                   <option value="APAAR_MISMATCH">APAAR ID Data Mismatch</option>
                   <option value="NAME_CORRECTION">Student Name / DOB Correction</option>
                   <option value="CREDIT_TRANSFER">Academic Bank of Credits (ABC) Discrepancy</option>
-                  <option value="DIGILOCKER_SYNC">DigiLocker Verification Issue</option>
                   <option value="INTAKE_DISCREPANCY">Intake & Admission Status</option>
                 </select>
               </div>

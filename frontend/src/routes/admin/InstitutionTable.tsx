@@ -35,6 +35,24 @@ export default function InstitutionTable() {
     },
     {
       code: 'C-18491',
+      name: 'Easwari Engineering College',
+      state: 'Tamil Nadu',
+      approved: 1800,
+      actual: 1765,
+      status: 'Compliant',
+      branches: [
+        { branch: 'Computer Science & Engineering', approved: 360, actual: 358 },
+        { branch: 'Information Technology', approved: 240, actual: 236 },
+        { branch: 'Artificial Intelligence & Data Science', approved: 240, actual: 238 },
+        { branch: 'Electronics & Communication Engg', approved: 300, actual: 294 },
+        { branch: 'Mechanical Engineering', approved: 240, actual: 232 },
+        { branch: 'Electrical & Electronics Engg', approved: 180, actual: 175 },
+        { branch: 'Civil Engineering', approved: 120, actual: 116 },
+        { branch: 'Biomedical Engineering', approved: 120, actual: 116 }
+      ]
+    },
+    {
+      code: 'C-41209',
       name: 'Delhi Technological University',
       state: 'Delhi',
       approved: 2800,

@@ -202,10 +202,12 @@ export default function QueryControlCenter() {
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white"
                 >
                   <option value="ALL">All Colleges (National Broadcast)</option>
+                  <option value="C-18491">C-18491 — Easwari Engineering College</option>
                   <option value="C-16622">C-16622 — Chennai Institute of Technology & Engineering</option>
                   <option value="C-24891">C-24891 — National Institute of Technology (NIT Trichy)</option>
                   <option value="C-41209">C-41209 — Delhi College of Engineering & Research</option>
                   <option value="C-53104">C-53104 — Bangalore Technological University</option>
+                  <option value="C-62840">C-62840 — Apex Institute of Science & Technology</option>
                 </select>
               </div>
 
