@@ -15,6 +15,7 @@ import {
   School
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotifications } from '../../hooks/useNotifications';
 import toast from 'react-hot-toast';
 
 export default function StudentForm() {
@@ -22,6 +23,7 @@ export default function StudentForm() {
 
   const collegeName = user?.institutionName || 'National Institute of Technology & Engineering';
   const collegeCode = user?.aisheCode || 'C-16622';
+  const { sendNotification } = useNotifications('COLLEGE_NODAL', collegeCode);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -94,8 +96,31 @@ export default function StudentForm() {
         quota: formData.admissionQuota
       });
 
+      // 1. Notify Moderator of new college admission and quota intake update
+      sendNotification({
+        title: `College Admission Enrolled (${collegeCode})`,
+        message: `${collegeName} registered student ${formData.name} under ${formData.degree} (${formData.admissionQuota}). Quota utilization tracked.`,
+        targetRole: 'MODERATOR',
+        sender: `${collegeName} (${collegeCode})`,
+        senderRole: 'COLLEGE_NODAL',
+        type: 'info',
+        actionUrl: '/admin/intake'
+      });
+
+      // 2. Notify Student that their record is confirmed and APAAR ID is ready
+      sendNotification({
+        title: `Admission Certified & APAAR ID Ready!`,
+        message: `Your college ${collegeName} has certified your admission and generated your verified APAAR ID: ${generatedApaar}.`,
+        targetRole: 'STUDENT',
+        targetStudentId: generatedApaar,
+        sender: `${collegeName} Admissions`,
+        senderRole: 'COLLEGE_NODAL',
+        type: 'success',
+        actionUrl: '/student'
+      });
+
       setIsSubmitting(false);
-      toast.success(`Student ${formData.name} enrolled under College Code ${collegeCode}! APAAR ID generated.`);
+      toast.success(`Student ${formData.name} enrolled under College Code ${collegeCode}! Pop-up notifications sent to Moderator & Student.`);
     }, 800);
   };
 

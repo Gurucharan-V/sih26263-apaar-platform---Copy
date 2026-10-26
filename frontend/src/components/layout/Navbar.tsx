@@ -27,6 +27,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
+import { useNotifications } from '../../hooks/useNotifications';
+
 export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moderator' }> = ({ portal }) => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
@@ -48,40 +50,35 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Notifications
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: 'Batch #EEC-2024-9921 Ingestion Synced',
-      description: '146 student records validated with Verhoeff checksum. 0 critical errors.',
-      time: '5m ago',
-      unread: true,
-      type: 'success'
-    },
-    {
-      id: 'notif-2',
-      title: 'Anna University Intake Sanction Verified',
-      description: 'Easwari Engineering College 2024-25 quota confirmed (1,450 seats).',
-      time: '45m ago',
-      unread: true,
-      type: 'info'
-    },
-    {
-      id: 'notif-3',
-      title: 'Query Resolution Update',
-      description: 'Moderator replied to Query #QRY-2024-8901 regarding APAAR name alignment.',
-      time: '2h ago',
-      unread: false,
-      type: 'warning'
-    }
-  ]);
+  const isLoginPage = location.pathname.startsWith('/login') || location.pathname === '/';
+  const isInsidePortal = !isLoginPage && (
+    location.pathname.startsWith('/student') ||
+    location.pathname.startsWith('/college') ||
+    location.pathname.startsWith('/admin')
+  );
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  // Determine active portal type strictly based on current URL path or active portal prop
+  const activePortalType: 'STUDENT' | 'COLLEGE_NODAL' | 'MODERATOR' = 
+    location.pathname.startsWith('/student')
+      ? 'STUDENT'
+      : location.pathname.startsWith('/college')
+      ? 'COLLEGE_NODAL'
+      : location.pathname.startsWith('/admin')
+      ? 'MODERATOR'
+      : portal === 'student'
+      ? 'STUDENT'
+      : portal === 'college'
+      ? 'COLLEGE_NODAL'
+      : portal === 'admin' || portal === 'moderator'
+      ? 'MODERATOR'
+      : (user?.role === 'MODERATOR' ? 'MODERATOR' : user?.role === 'COLLEGE_NODAL' ? 'COLLEGE_NODAL' : 'STUDENT');
 
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    toast.success('All notifications marked as read');
-  };
+  // Real-time notifications for the active role
+  const { notifications, unreadCount, markAllAsRead, markAsRead } = useNotifications(
+    activePortalType,
+    user?.aisheCode,
+    user?.apaarId
+  );
 
   const handleLogout = () => {
     logout();
@@ -90,26 +87,27 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
     navigate('/login');
   };
 
-  // Determine current display info based on portal or user session
-  const effectiveRole = user?.role || (portal === 'student' ? 'STUDENT' : portal === 'college' ? 'COLLEGE_NODAL' : 'MODERATOR');
-  
-  const displayName = user?.name || (
-    effectiveRole === 'STUDENT'
-      ? 'Rohan Sundaram'
-      : effectiveRole === 'COLLEGE_NODAL'
-      ? 'Dr. R. Rajesh'
-      : 'Dr. V. K. Sharma'
-  );
+  const displayName = isLoginPage
+    ? 'Visitor'
+    : user?.name || (
+      activePortalType === 'STUDENT'
+        ? 'Rohan Sundaram'
+        : activePortalType === 'COLLEGE_NODAL'
+        ? 'Dr. R. Rajesh'
+        : 'Dr. V. K. Sharma'
+    );
 
-  const displaySubtitle = effectiveRole === 'STUDENT'
-    ? 'APAAR ID: 9842-1083-4912 • EEC Student'
-    : effectiveRole === 'COLLEGE_NODAL'
-    ? 'EEC Nodal Officer • AISHE: C-16622'
-    : 'State Admin & National Moderator • AICTE/MoE';
+  const displaySubtitle = isLoginPage
+    ? 'Ministry of Education • Government of India'
+    : activePortalType === 'STUDENT'
+    ? (user?.institutionName ? `${user.institutionName} • Student Portal` : 'National Higher Education Gateway')
+    : activePortalType === 'COLLEGE_NODAL'
+    ? `${user?.institutionName || 'Affiliated Institution'} (AISHE: ${user?.aisheCode || 'C-16622'})`
+    : 'National APAAR & Intake Moderation Bureau • MoE';
 
-  const portalBadge = effectiveRole === 'STUDENT'
+  const portalBadge = activePortalType === 'STUDENT'
     ? { title: 'Student Portal', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: GraduationCap }
-    : effectiveRole === 'COLLEGE_NODAL'
+    : activePortalType === 'COLLEGE_NODAL'
     ? { title: 'College Portal', color: 'bg-blue-50 text-blue-800 border-blue-200', icon: Building2 }
     : { title: 'Moderator Portal', color: 'bg-purple-50 text-purple-800 border-purple-200', icon: ShieldCheck };
 
@@ -122,10 +120,16 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
         <div className="flex items-center gap-3">
           <div
             onClick={() => navigate(user?.role === 'STUDENT' ? '/student' : user?.role === 'COLLEGE_NODAL' ? '/college' : user?.role === 'MODERATOR' ? '/admin' : '/login')}
-            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex items-center justify-center shadow-xs cursor-pointer border border-slate-700/50 hover:scale-105 transition"
+            className={`w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-xs cursor-pointer border border-slate-700/50 hover:scale-105 transition ${
+              activePortalType === 'STUDENT'
+                ? 'bg-gradient-to-tr from-emerald-900 to-teal-800'
+                : activePortalType === 'COLLEGE_NODAL'
+                ? 'bg-gradient-to-tr from-blue-900 to-indigo-900'
+                : 'bg-gradient-to-tr from-purple-950 to-slate-900'
+            }`}
             title="National Academic Registry Portal"
           >
-            <GraduationCap className="w-5 h-5 text-emerald-400" />
+            <BadgeIcon className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -140,66 +144,50 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                 <span>{portalBadge.title}</span>
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium truncate max-w-[200px] sm:max-w-xs">
-              {user?.institutionName || 'National Higher Education Gateway'} • Ministry of Education
+            <p className="text-[11px] text-slate-500 font-medium truncate max-w-[200px] sm:max-w-sm">
+              {displaySubtitle}
             </p>
           </div>
         </div>
 
-        {/* Center: Portal Switcher Tabs */}
-        <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
-          <button
-            onClick={() => {
-              if (user?.role === 'STUDENT') {
-                navigate('/student');
-              } else {
-                navigate('/login/student');
-              }
-            }}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-              location.pathname.startsWith('/student')
-                ? 'bg-white text-emerald-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5" />
-            <span>Student Portal</span>
-          </button>
-          <button
-            onClick={() => {
-              if (user?.role === 'COLLEGE_NODAL') {
-                navigate('/college');
-              } else {
-                navigate('/login/college');
-              }
-            }}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-              location.pathname.startsWith('/college')
-                ? 'bg-white text-blue-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>College Portal</span>
-          </button>
-          <button
-            onClick={() => {
-              if (user?.role === 'MODERATOR') {
-                navigate('/admin');
-              } else {
-                navigate('/login/moderator');
-              }
-            }}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-              location.pathname.startsWith('/admin')
-                ? 'bg-white text-purple-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Moderator Portal</span>
-          </button>
-        </div>
+        {/* Center: Portal Switcher Tabs ONLY SHOWN AT FIRST ON LOGIN / SELECTION - NOT inside single portal */}
+        {isLoginPage && (
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+            <button
+              onClick={() => navigate('/login/student')}
+              className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+                activePortalType === 'STUDENT'
+                  ? 'bg-white text-emerald-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Student Portal</span>
+            </button>
+            <button
+              onClick={() => navigate('/login/college')}
+              className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+                activePortalType === 'COLLEGE_NODAL'
+                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>College Portal</span>
+            </button>
+            <button
+              onClick={() => navigate('/login/moderator')}
+              className={`px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+                activePortalType === 'MODERATOR'
+                  ? 'bg-white text-purple-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Moderator Portal</span>
+            </button>
+          </div>
+        )}
 
         {/* Right: Notifications & "Three Line Style" Menu Button */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -237,7 +225,7 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                   </div>
                   {unreadCount > 0 && (
                     <button
-                      onClick={handleMarkAllRead}
+                      onClick={markAllAsRead}
                       className="text-[11px] text-blue-300 hover:text-white flex items-center gap-1 hover:underline transition"
                     >
                       <CheckCheck className="w-3.5 h-3.5" />
@@ -247,42 +235,53 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                 </div>
 
                 <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
-                  {notifications.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`p-3.5 hover:bg-slate-50 transition cursor-pointer flex gap-3 ${
-                        item.unread ? 'bg-blue-50/40' : ''
-                      }`}
-                      onClick={() => {
-                        setNotifications((prev) =>
-                          prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
-                        );
-                      }}
-                    >
-                      <div className="mt-0.5">
-                        {item.type === 'warning' ? (
-                          <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                            <AlertCircle className="w-4 h-4" />
-                          </div>
-                        ) : item.type === 'success' ? (
-                          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                            <FileCheck2 className="w-4 h-4" />
-                          </div>
-                        ) : (
-                          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-                            <ShieldCheck className="w-4 h-4" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <h4 className="text-xs font-semibold text-slate-800">{item.title}</h4>
-                          <span className="text-[10px] text-slate-400">{item.time}</span>
-                        </div>
-                        <p className="text-xs text-slate-600">{item.description}</p>
-                      </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      No notifications at this time
                     </div>
-                  ))}
+                  ) : (
+                    notifications.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`p-3.5 hover:bg-slate-50 transition cursor-pointer flex gap-3 ${
+                          item.unread ? 'bg-blue-50/40' : ''
+                        }`}
+                        onClick={() => {
+                          markAsRead(item.id);
+                          if (item.actionUrl) {
+                            setShowNotifications(false);
+                            navigate(item.actionUrl);
+                          }
+                        }}
+                      >
+                        <div className="mt-0.5">
+                          {item.type === 'warning' || item.type === 'alert' ? (
+                            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                              <AlertCircle className="w-4 h-4" />
+                            </div>
+                          ) : item.type === 'success' ? (
+                            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                              <FileCheck2 className="w-4 h-4" />
+                            </div>
+                          ) : (
+                            <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+                              <ShieldCheck className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase truncate max-w-[150px]">
+                              {item.sender}
+                            </span>
+                            <span className="text-[10px] text-slate-400">{item.timestamp}</span>
+                          </div>
+                          <h4 className="text-xs font-semibold text-slate-800 truncate">{item.title}</h4>
+                          <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{item.message}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -341,12 +340,12 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                     <h4 className="font-bold text-base text-white truncate">{displayName}</h4>
                   </div>
                   <p className="text-xs text-blue-300 font-mono truncate">
-                    {user?.email || (effectiveRole === 'STUDENT' ? 'student@institute.ac.in' : effectiveRole === 'COLLEGE_NODAL' ? 'nodal@college.ac.in' : 'moderator@education.gov.in')}
+                    {user?.email || (activePortalType === 'STUDENT' ? 'student@institute.ac.in' : activePortalType === 'COLLEGE_NODAL' ? 'nodal@college.ac.in' : 'moderator@education.gov.in')}
                   </p>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       <ShieldCheck className="w-3 h-3" />
-                      {effectiveRole === 'STUDENT' ? 'Verified Student' : effectiveRole === 'COLLEGE_NODAL' ? 'Verified Nodal Officer' : 'National Moderator'}
+                      {activePortalType === 'STUDENT' ? 'Verified Student' : activePortalType === 'COLLEGE_NODAL' ? 'Verified Nodal Officer' : 'National Moderator'}
                     </span>
                   </div>
                 </div>

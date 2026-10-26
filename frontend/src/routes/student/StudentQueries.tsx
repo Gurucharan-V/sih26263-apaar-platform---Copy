@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useQueries, StudentQuery } from '../../hooks/useQueries';
+import { useNotifications } from '../../hooks/useNotifications';
 import toast from 'react-hot-toast';
 
 export default function StudentQueries() {
   const { user } = useAuth();
   const { queries, addQuery } = useQueries();
+  const { sendNotification } = useNotifications('STUDENT', user?.aisheCode, user?.apaarId);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [category, setCategory] = useState<StudentQuery['category']>('APAAR_MISMATCH');
@@ -54,11 +56,35 @@ export default function StudentQueries() {
         description,
         priority
       });
+
+      // 1. Notify National Moderator
+      sendNotification({
+        title: `Student Grievance Filed: ${subject}`,
+        message: `${studentName} (${institution}) logged a ${priority} priority query: "${description.substring(0, 90)}..."`,
+        targetRole: 'MODERATOR',
+        sender: `Student: ${studentName}`,
+        senderRole: 'STUDENT',
+        type: priority === 'CRITICAL' || priority === 'HIGH' ? 'alert' : 'warning',
+        actionUrl: '/admin/queries'
+      });
+
+      // 2. Notify College Nodal Office
+      sendNotification({
+        title: `Student Grievance Notice (${studentName})`,
+        message: `Student filed grievance under category "${category}". Subject: ${subject}.`,
+        targetRole: 'COLLEGE_NODAL',
+        targetCollegeCode: user?.aisheCode || 'C-16622',
+        sender: `Student: ${studentName}`,
+        senderRole: 'STUDENT',
+        type: 'info',
+        actionUrl: '/college'
+      });
+
       setIsSubmitting(false);
       setIsFormOpen(false);
       setSubject('');
       setDescription('');
-      toast.success('Query submitted to National Moderator Desk!');
+      toast.success('Query submitted! Pop-up notifications sent to National Moderator & College.');
     }, 500);
   };
 

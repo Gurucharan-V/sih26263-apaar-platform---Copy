@@ -20,15 +20,24 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useQueries, StudentQuery } from '../../hooks/useQueries';
+import { useNotifications } from '../../hooks/useNotifications';
 import toast from 'react-hot-toast';
 
 export default function QueryControlCenter() {
   const { queries, updateQueryStatus } = useQueries();
+  const { sendNotification } = useNotifications('MODERATOR');
+
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'PENDING_REVIEW' | 'IN_PROGRESS' | 'RESOLVED' | 'CRITICAL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState<StudentQuery | null>(null);
   const [moderatorReply, setModeratorReply] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Quick Direct Action to College modal
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
+  const [noticeTargetCollege, setNoticeTargetCollege] = useState('C-16622');
+  const [noticeTitle, setNoticeTitle] = useState('AICTE Sanctioned Intake Verification Directive');
+  const [noticeMessage, setNoticeMessage] = useState('College administration is requested to submit verified admission rosters for AICTE quota audit within 48 hours.');
 
   // Filter queries
   const filteredQueries = queries.filter((q) => {
@@ -69,14 +78,61 @@ export default function QueryControlCenter() {
       setIsSubmitting(false);
       setActiveQuery((prev) => prev ? { ...prev, status: newStatus, moderatorNotes: moderatorReply } : null);
 
+      // 1. Notify the respective College
+      sendNotification({
+        title: `Moderator Action: Query #${activeQuery.id} Marked ${newStatus}`,
+        message: moderatorReply
+          ? `Notes from National Moderator: "${moderatorReply}". Pertaining to student ${activeQuery.studentName}.`
+          : `National Moderator processed query #${activeQuery.id} for student ${activeQuery.studentName}. Status: ${newStatus}.`,
+        targetRole: 'COLLEGE_NODAL',
+        sender: 'National Moderator (Dr. V. K. Sharma)',
+        senderRole: 'MODERATOR',
+        type: newStatus === 'RESOLVED' ? 'success' : 'warning',
+        actionUrl: '/college'
+      });
+
+      // 2. Notify the Student
+      sendNotification({
+        title: `Grievance Update: #${activeQuery.id} ${newStatus}`,
+        message: moderatorReply
+          ? `Decision: "${moderatorReply}". Your official record has been updated.`
+          : `Your grievance query #${activeQuery.id} has been marked as ${newStatus} by the Ministry oversight cell.`,
+        targetRole: 'STUDENT',
+        targetStudentId: activeQuery.apaarId,
+        sender: 'National Moderator (Dr. V. K. Sharma)',
+        senderRole: 'MODERATOR',
+        type: newStatus === 'RESOLVED' ? 'success' : 'info',
+        actionUrl: '/student/queries'
+      });
+
       if (newStatus === 'RESOLVED') {
-        toast.success(`Query #${activeQuery.id} resolved and official student registry updated!`);
-      } else if (newStatus === 'IN_PROGRESS') {
-        toast.success(`Query #${activeQuery.id} marked as In Progress with notes saved.`);
+        toast.success(`Query #${activeQuery.id} resolved! Pop-up notifications dispatched to College & Student.`);
       } else {
-        toast(`Query #${activeQuery.id} status updated to ${newStatus}.`, { icon: 'ℹ️' });
+        toast.success(`Query #${activeQuery.id} updated! Notification sent to College & Student.`);
       }
     }, 400);
+  };
+
+  const handleSendNoticeToCollege = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noticeTitle.trim() || !noticeMessage.trim()) {
+      toast.error('Please enter notice title and message');
+      return;
+    }
+
+    sendNotification({
+      title: `Official Directive: ${noticeTitle}`,
+      message: noticeMessage,
+      targetRole: 'COLLEGE_NODAL',
+      targetCollegeCode: noticeTargetCollege === 'ALL' ? undefined : noticeTargetCollege,
+      sender: 'National Moderator (AICTE/MoE Cell)',
+      senderRole: 'MODERATOR',
+      type: 'warning',
+      actionUrl: '/college'
+    });
+
+    toast.success(`Action Directive sent! Pop-up alert will display in College Portal (${noticeTargetCollege}).`);
+    setShowNoticeModal(false);
   };
 
   return (
@@ -99,6 +155,13 @@ export default function QueryControlCenter() {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowNoticeModal(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Send Action Directive to College</span>
+          </button>
+          <button
             onClick={() => toast.success('Synchronized with National MoE Gateway')}
             className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
           >
@@ -107,6 +170,89 @@ export default function QueryControlCenter() {
           </button>
         </div>
       </div>
+
+      {/* Direct Action Notice Modal to College */}
+      {showNoticeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                  <Building2 className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">Send Directive to College</h3>
+                  <p className="text-xs text-slate-500">Triggers an official popup alert in the college portal</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowNoticeModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendNoticeToCollege} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Target College (Unique AISHE)</label>
+                <select
+                  value={noticeTargetCollege}
+                  onChange={(e) => setNoticeTargetCollege(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white"
+                >
+                  <option value="ALL">All Colleges (National Broadcast)</option>
+                  <option value="C-16622">C-16622 — Chennai Institute of Technology & Engineering</option>
+                  <option value="C-24891">C-24891 — National Institute of Technology (NIT Trichy)</option>
+                  <option value="C-41209">C-41209 — Delhi College of Engineering & Research</option>
+                  <option value="C-53104">C-53104 — Bangalore Technological University</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Directive Subject</label>
+                <input
+                  type="text"
+                  value={noticeTitle}
+                  onChange={(e) => setNoticeTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold"
+                  placeholder="e.g. Sanctioned Intake Verification Directive"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Official Directive Message</label>
+                <textarea
+                  rows={3}
+                  value={noticeMessage}
+                  onChange={(e) => setNoticeMessage(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+                  placeholder="Enter detailed action instructions for the college nodal authority..."
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNoticeModal(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Dispatch Pop-Up Directive</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
