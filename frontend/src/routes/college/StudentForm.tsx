@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   Building2,
   UserPlus,
@@ -28,15 +28,16 @@ export default function StudentForm() {
   const [formData, setFormData] = useState({
     name: '',
     dob: '',
-    gender: 'Male',
+    gender: '',
     guardianName: '',
     email: '',
     contactPhone: '',
     rollNo: '',
-    degree: 'B.Tech - Computer Science',
-    admissionQuota: 'Government Merit Quota',
-    admissionYear: '2024',
-    academicYear: '2024-2025',
+    degree: '',
+    department: '',
+    admissionQuota: '',
+    admissionYear: '',
+    academicYear: '',
     aadhaarMasked: '',
     nodalCertified: true
   });
@@ -151,15 +152,16 @@ export default function StudentForm() {
     setFormData({
       name: '',
       dob: '',
-      gender: 'Male',
+      gender: '',
       guardianName: '',
       email: '',
       contactPhone: '',
       rollNo: '',
-      degree: 'B.Tech - Computer Science',
-      admissionQuota: 'Government Merit Quota',
-      admissionYear: '2024',
-      academicYear: '2024-2025',
+      degree: '',
+      department: '',
+      admissionQuota: '',
+      admissionYear: '',
+      academicYear: '',
       aadhaarMasked: '',
       nodalCertified: true
     });
@@ -451,19 +453,118 @@ export default function StudentForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Enrolled Programme / Degree</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Degree / Programme <span className="text-rose-500">*</span>
+              </label>
               <select
                 name="degree"
                 value={formData.degree}
                 onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium"
+                required
               >
-                <option value="B.Tech - Computer Science">B.Tech - Computer Science & Engineering</option>
-                <option value="B.Tech - Artificial Intelligence">B.Tech - AI & Data Science</option>
-                <option value="B.E. - Electronics & Comm">B.E. - Electronics & Communication</option>
-                <option value="B.E. - Mechanical Engineering">B.E. - Mechanical Engineering</option>
-                <option value="B.Tech - Information Technology">B.Tech - Information Technology</option>
-                <option value="MBA - Master of Business Admin">MBA - Business Administration</option>
+                <option value="">-- Select Degree / Programme --</option>
+                <optgroup label="Engineering (B.E. / B.Tech)">
+                  <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                  <option value="B.E.">B.E. (Bachelor of Engineering)</option>
+                  <option value="B.Tech Lateral Entry">B.Tech - Lateral Entry (Diploma)</option>
+                </optgroup>
+                <optgroup label="Science">
+                  <option value="B.Sc.">B.Sc. (Bachelor of Science)</option>
+                  <option value="M.Sc.">M.Sc. (Master of Science)</option>
+                  <option value="Integrated M.Sc.">Integrated M.Sc. (5 Year)</option>
+                </optgroup>
+                <optgroup label="Arts &amp; Commerce">
+                  <option value="B.A.">B.A. (Bachelor of Arts)</option>
+                  <option value="B.Com.">B.Com. (Bachelor of Commerce)</option>
+                  <option value="M.A.">M.A. (Master of Arts)</option>
+                  <option value="M.Com.">M.Com. (Master of Commerce)</option>
+                </optgroup>
+                <optgroup label="Management">
+                  <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                  <option value="MBA">MBA (Master of Business Administration)</option>
+                </optgroup>
+                <optgroup label="Medical &amp; Pharma">
+                  <option value="MBBS">MBBS (Bachelor of Medicine)</option>
+                  <option value="B.Pharm.">B.Pharm. (Bachelor of Pharmacy)</option>
+                  <option value="M.Pharm.">M.Pharm. (Master of Pharmacy)</option>
+                  <option value="BDS">BDS (Bachelor of Dental Surgery)</option>
+                </optgroup>
+                <optgroup label="Postgraduate Engineering">
+                  <option value="M.Tech">M.Tech (Master of Technology)</option>
+                  <option value="M.E.">M.E. (Master of Engineering)</option>
+                </optgroup>
+                <optgroup label="Doctoral">
+                  <option value="Ph.D.">Ph.D. (Doctor of Philosophy)</option>
+                  <option value="M.Phil.">M.Phil. (Master of Philosophy)</option>
+                </optgroup>
+                <optgroup label="Diploma &amp; Certificate">
+                  <option value="Diploma Engineering">Diploma in Engineering (Polytechnic)</option>
+                  <option value="PG Diploma">Post Graduate Diploma</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Department / Specialization <span className="text-rose-500">*</span>
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium"
+                required
+              >
+                <option value="">-- Select Department / Specialization --</option>
+                <optgroup label="Engineering &amp; Technology">
+                  <option value="Computer Science and Engineering">Computer Science and Engineering (CSE)</option>
+                  <option value="Information Technology">Information Technology (IT)</option>
+                  <option value="Artificial Intelligence &amp; Data Science">AI &amp; Data Science (AI&amp;DS)</option>
+                  <option value="Artificial Intelligence &amp; Machine Learning">AI &amp; Machine Learning (AIML)</option>
+                  <option value="Electronics and Communication Engineering">Electronics &amp; Communication Engg (ECE)</option>
+                  <option value="Electrical and Electronics Engineering">Electrical &amp; Electronics Engg (EEE)</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
+                  <option value="Civil Engineering">Civil Engineering (CIVIL)</option>
+                  <option value="Aerospace Engineering">Aerospace Engineering</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Biotechnology Engineering">Biotechnology Engineering</option>
+                  <option value="Biomedical Engineering">Biomedical Engineering</option>
+                  <option value="Automobile Engineering">Automobile Engineering</option>
+                  <option value="Marine Engineering">Marine Engineering</option>
+                </optgroup>
+                <optgroup label="Sciences">
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Statistics">Statistics</option>
+                  <option value="Microbiology">Microbiology</option>
+                  <option value="Biochemistry">Biochemistry</option>
+                </optgroup>
+                <optgroup label="Arts &amp; Humanities">
+                  <option value="English Literature">English Literature</option>
+                  <option value="Tamil">Tamil</option>
+                  <option value="History">History</option>
+                  <option value="Economics">Economics</option>
+                  <option value="Political Science">Political Science</option>
+                  <option value="Sociology">Sociology</option>
+                  <option value="Psychology">Psychology</option>
+                </optgroup>
+                <optgroup label="Commerce &amp; Management">
+                  <option value="Commerce">Commerce</option>
+                  <option value="Business Administration">Business Administration</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Human Resource Management">Human Resource Management (HRM)</option>
+                  <option value="Marketing Management">Marketing Management</option>
+                  <option value="Operations Management">Operations Management</option>
+                </optgroup>
+                <optgroup label="Medical &amp; Allied Health">
+                  <option value="General Medicine">General Medicine</option>
+                  <option value="Pharmacy">Pharmacy (Pharmaceutics)</option>
+                  <option value="Pharmacology">Pharmacology</option>
+                  <option value="Nursing">Nursing</option>
+                  <option value="Physiotherapy">Physiotherapy</option>
+                </optgroup>
               </select>
             </div>
 
@@ -475,6 +576,7 @@ export default function StudentForm() {
                 onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-medium"
               >
+                <option value="">-- Select Quota Category --</option>
                 <option value="Government Merit Quota">Government Merit Quota (Central / State)</option>
                 <option value="Institutional Merit Quota">Institutional Merit Quota</option>
                 <option value="Management Quota">Management Quota (Approved Intake)</option>
@@ -484,14 +586,20 @@ export default function StudentForm() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Admission Academic Year</label>
-              <input
-                type="text"
+              <select
                 name="admissionYear"
                 value={formData.admissionYear}
                 onChange={handleChange}
-                placeholder="2024"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              >
+                <option value="">-- Select Year --</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+              </select>
             </div>
           </div>
         </div>

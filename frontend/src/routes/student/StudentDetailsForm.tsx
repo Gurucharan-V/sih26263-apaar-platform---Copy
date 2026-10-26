@@ -24,29 +24,29 @@ export default function StudentDetailsForm() {
   const navigate = useNavigate();
   const { user, updateUserProfile } = useAuth();
 
-  // Pre-fill with existing user session data or defaults
+  // Pre-fill only from existing user session — never hardcode defaults
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    dob: user?.dob || '2004-05-14',
-    gender: user?.gender || 'Male',
-    bloodGroup: user?.bloodGroup || 'O+',
+    dob: user?.dob || '',
+    gender: user?.gender || '',
+    bloodGroup: user?.bloodGroup || '',
     fatherName: user?.fatherName || '',
     motherName: user?.motherName || '',
-    phone: user?.phone || '+91 98765 43210',
+    phone: user?.phone || '',
     email: user?.email || '',
     address: user?.address || '',
-    city: user?.city || 'Chennai',
-    state: user?.state || 'Tamil Nadu',
-    pincode: user?.pincode || '600040',
-    institutionName: user?.institutionName || 'National Institute of Technology & Higher Education',
-    aisheCode: user?.aisheCode || 'C-16622',
-    degree: user?.degree || 'B.Tech - Computer Science',
-    department: user?.department || 'Computer Science and Engineering',
-    admissionYear: user?.admissionYear || '2024',
-    semester: user?.semester || 'Semester 4',
-    rollNo: user?.rollNo || '2024CS042',
-    abcId: user?.abcId || 'ABC-102-984-219',
-    aadhaarMasked: user?.aadhaarMasked || 'XXXX-XXXX-4912',
+    city: user?.city || '',
+    state: user?.state || '',
+    pincode: user?.pincode || '',
+    institutionName: user?.institutionName || '',
+    aisheCode: user?.aisheCode || '',
+    degree: user?.degree || '',
+    department: user?.department || '',
+    admissionYear: user?.admissionYear || '',
+    semester: user?.semester || '',
+    rollNo: user?.rollNo || '',
+    abcId: user?.abcId || '',
+    aadhaarMasked: user?.aadhaarMasked || '',
     consentDigiLocker: true
   });
 
@@ -396,30 +396,116 @@ export default function StudentDetailsForm() {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Degree / Programme <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 name="degree"
                 value={formData.degree}
                 onChange={handleChange}
-                placeholder="e.g. B.Tech / B.E."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
                 required
-              />
+              >
+                <option value="">-- Select Degree / Programme --</option>
+                <optgroup label="Engineering (B.E. / B.Tech)">
+                  <option value="B.Tech">B.Tech (Bachelor of Technology)</option>
+                  <option value="B.E.">B.E. (Bachelor of Engineering)</option>
+                  <option value="B.Tech Lateral Entry">B.Tech - Lateral Entry (Diploma)</option>
+                </optgroup>
+                <optgroup label="Science">
+                  <option value="B.Sc.">B.Sc. (Bachelor of Science)</option>
+                  <option value="M.Sc.">M.Sc. (Master of Science)</option>
+                  <option value="Integrated M.Sc.">Integrated M.Sc. (5 Year)</option>
+                </optgroup>
+                <optgroup label="Arts & Commerce">
+                  <option value="B.A.">B.A. (Bachelor of Arts)</option>
+                  <option value="B.Com.">B.Com. (Bachelor of Commerce)</option>
+                  <option value="M.A.">M.A. (Master of Arts)</option>
+                  <option value="M.Com.">M.Com. (Master of Commerce)</option>
+                </optgroup>
+                <optgroup label="Management">
+                  <option value="BBA">BBA (Bachelor of Business Administration)</option>
+                  <option value="MBA">MBA (Master of Business Administration)</option>
+                </optgroup>
+                <optgroup label="Medical & Pharma">
+                  <option value="MBBS">MBBS (Bachelor of Medicine)</option>
+                  <option value="B.Pharm.">B.Pharm. (Bachelor of Pharmacy)</option>
+                  <option value="M.Pharm.">M.Pharm. (Master of Pharmacy)</option>
+                  <option value="BDS">BDS (Bachelor of Dental Surgery)</option>
+                </optgroup>
+                <optgroup label="Postgraduate Engineering">
+                  <option value="M.Tech">M.Tech (Master of Technology)</option>
+                  <option value="M.E.">M.E. (Master of Engineering)</option>
+                </optgroup>
+                <optgroup label="Doctoral">
+                  <option value="Ph.D.">Ph.D. (Doctor of Philosophy)</option>
+                  <option value="M.Phil.">M.Phil. (Master of Philosophy)</option>
+                </optgroup>
+                <optgroup label="Diploma & Certificate">
+                  <option value="Diploma Engineering">Diploma in Engineering (Polytechnic)</option>
+                  <option value="PG Diploma">Post Graduate Diploma</option>
+                </optgroup>
+              </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Department / Specialization <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                placeholder="e.g. Computer Science and Engineering"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
                 required
-              />
+              >
+                <option value="">-- Select Department / Specialization --</option>
+                <optgroup label="Engineering & Technology">
+                  <option value="Computer Science and Engineering">Computer Science and Engineering (CSE)</option>
+                  <option value="Information Technology">Information Technology (IT)</option>
+                  <option value="Artificial Intelligence & Data Science">Artificial Intelligence &amp; Data Science (AI&DS)</option>
+                  <option value="Artificial Intelligence & Machine Learning">Artificial Intelligence &amp; Machine Learning (AIML)</option>
+                  <option value="Electronics and Communication Engineering">Electronics &amp; Communication Engineering (ECE)</option>
+                  <option value="Electrical and Electronics Engineering">Electrical &amp; Electronics Engineering (EEE)</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
+                  <option value="Civil Engineering">Civil Engineering (CIVIL)</option>
+                  <option value="Aerospace Engineering">Aerospace Engineering</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                  <option value="Biotechnology Engineering">Biotechnology Engineering</option>
+                  <option value="Biomedical Engineering">Biomedical Engineering</option>
+                  <option value="Automobile Engineering">Automobile Engineering</option>
+                  <option value="Marine Engineering">Marine Engineering</option>
+                </optgroup>
+                <optgroup label="Sciences">
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Statistics">Statistics</option>
+                  <option value="Microbiology">Microbiology</option>
+                  <option value="Biochemistry">Biochemistry</option>
+                </optgroup>
+                <optgroup label="Arts & Humanities">
+                  <option value="English Literature">English Literature</option>
+                  <option value="Tamil">Tamil</option>
+                  <option value="History">History</option>
+                  <option value="Economics">Economics</option>
+                  <option value="Political Science">Political Science</option>
+                  <option value="Sociology">Sociology</option>
+                  <option value="Psychology">Psychology</option>
+                </optgroup>
+                <optgroup label="Commerce & Management">
+                  <option value="Commerce">Commerce</option>
+                  <option value="Business Administration">Business Administration</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Human Resource Management">Human Resource Management (HRM)</option>
+                  <option value="Marketing Management">Marketing Management</option>
+                  <option value="Operations Management">Operations Management</option>
+                </optgroup>
+                <optgroup label="Medical & Allied Health">
+                  <option value="General Medicine">General Medicine</option>
+                  <option value="Pharmacy">Pharmacy (Pharmaceutics)</option>
+                  <option value="Pharmacology">Pharmacology</option>
+                  <option value="Nursing">Nursing</option>
+                  <option value="Physiotherapy">Physiotherapy</option>
+                </optgroup>
+              </select>
             </div>
 
             <div>
@@ -439,14 +525,20 @@ export default function StudentDetailsForm() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Admission Year</label>
-              <input
-                type="text"
+              <select
                 name="admissionYear"
                 value={formData.admissionYear}
                 onChange={handleChange}
-                placeholder="2024"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-              />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
+              >
+                <option value="">-- Select Year --</option>
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+              </select>
             </div>
 
             <div>
