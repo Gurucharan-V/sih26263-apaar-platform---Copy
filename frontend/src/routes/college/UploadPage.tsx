@@ -28,7 +28,7 @@ export default function UploadPage() {
   // Form fields
   const [apaarId, setApaarId] = useState('9842 1083 4912');
   const [studentName, setStudentName] = useState('Rohan Sundaram');
-  const [institution, setInstitution] = useState('Easwari Engineering College (EEC)');
+  const [institution, setInstitution] = useState('National Institute of Technology & Engineering');
   const [department, setDepartment] = useState('Computer Science & Engineering');
   const [course, setCourse] = useState('B.E. Computer Science and Engineering (4-Year)');
 
@@ -152,11 +152,9 @@ export default function UploadPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img
-            src="/assets/eec_college_logo.png"
-            alt="Easwari Engineering College Official Seal"
-            className="w-11 h-11 object-contain bg-white rounded-full p-0.5 border border-slate-200 shadow-xs"
-          />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex items-center justify-center shadow-xs border border-slate-700/50">
+            <Building2 className="w-5 h-5 text-blue-400" />
+          </div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-slate-900 text-sm sm:text-base">
@@ -167,7 +165,7 @@ export default function UploadPage() {
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium">
-              Easwari Engineering College (EEC) • AICTE Institution Code: 1-10971201
+              National Institute of Technology & Engineering • AICTE Institution Code: 1-10971201
             </p>
           </div>
         </div>

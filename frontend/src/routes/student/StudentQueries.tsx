@@ -29,7 +29,7 @@ export default function StudentQueries() {
 
   const studentName = user?.name || 'Rohan Sundaram';
   const apaarId = user?.apaarId || '9842-1083-4912';
-  const institution = user?.institutionName || 'Easwari Engineering College (EEC)';
+  const institution = user?.institutionName || 'Affiliated Higher Education Institution';
 
   // Filter queries for this student
   const myQueries = queries.filter(

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Building2,
   ShieldCheck,
@@ -20,9 +20,11 @@ import {
   Layers,
   Menu,
   Check,
-  Award
+  Award,
+  Hash,
+  School
 } from 'lucide-react';
-import { useAuth, UserRole } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -31,6 +33,14 @@ import { Navbar } from '../../components/layout/Navbar';
 import toast from 'react-hot-toast';
 
 export type PortalType = 'student' | 'college' | 'moderator';
+
+export const ACCREDITED_COLLEGES = [
+  { code: 'C-16622', name: 'Chennai Institute of Technology & Engineering' },
+  { code: 'C-24891', name: 'National Institute of Technology (NIT Trichy)' },
+  { code: 'C-41209', name: 'Delhi College of Engineering & Research' },
+  { code: 'C-53104', name: 'Bangalore Technological University' },
+  { code: 'C-62840', name: 'Apex Institute of Science & Technology' }
+];
 
 export default function Login({ defaultPortal }: { defaultPortal?: PortalType }) {
   const navigate = useNavigate();
@@ -55,6 +65,11 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
 
+  // College-specific state for unique code
+  const [selectedCollegeCode, setSelectedCollegeCode] = useState('C-16622');
+  const [customCollegeCode, setCustomCollegeCode] = useState('');
+  const [isCustomCollege, setIsCustomCollege] = useState(false);
+
   // Sync state if URL changes
   useEffect(() => {
     const portal = getInitialPortal();
@@ -69,8 +84,8 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       setIdentifier('9842-1083-4912'); // Student APAAR ID
       setPassword('student@2024');
     } else if (portal === 'college') {
-      setIdentifier('nodal@srmeaswari.ac.in'); // College Nodal Officer
-      setPassword('college@eec2024');
+      setIdentifier('nodal@college.ac.in'); // College Nodal Officer
+      setPassword('college@2024');
     } else {
       setIdentifier('moderator@education.gov.in'); // National Moderator
       setPassword('admin@moe2024');
@@ -87,9 +102,9 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
     setActivePortal(portal);
     loadDefaultCredentials(portal);
     if (portal === 'student') {
-      toast.success('Loaded EEC Student credentials (Rohan Sundaram)');
+      toast.success('Loaded Student credentials (Rohan Sundaram)');
     } else if (portal === 'college') {
-      toast.success('Loaded EEC Nodal Officer credentials (Dr. R. Rajesh)');
+      toast.success(`Loaded College Nodal credentials for ${selectedCollegeCode}`);
     } else {
       toast.success('Loaded AICTE / MoE Moderator credentials (Dr. V. K. Sharma)');
     }
@@ -102,7 +117,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
         activePortal === 'student'
           ? 'APAAR ID or Student Institutional Email is required'
           : activePortal === 'college'
-          ? 'AISHE Code or Institutional Email is required'
+          ? 'Nodal Officer Email is required'
           : 'Moderator Official ID or MoE Email is required';
     }
 
@@ -128,13 +143,17 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
     setTimeout(async () => {
       try {
-        await login(identifier, password, activePortal);
+        const finalCollegeCode = isCustomCollege ? (customCollegeCode || 'C-CUSTOM') : selectedCollegeCode;
+        const matchingCollege = ACCREDITED_COLLEGES.find((c) => c.code === finalCollegeCode);
+        const finalCollegeName = matchingCollege ? matchingCollege.name : 'Affiliated Higher Education Institution';
+
+        await login(identifier, password, activePortal, finalCollegeCode, finalCollegeName);
 
         if (activePortal === 'student') {
-          toast.success('Authenticated as Student! Opening Student Portal...');
-          navigate('/student');
+          toast.success('Authenticated as Student! Please fill in your details.');
+          navigate('/student/details'); // Direct to fill up all student details
         } else if (activePortal === 'college') {
-          toast.success('Authenticated as College Nodal Officer! Opening College Portal...');
+          toast.success(`Authenticated for College Code ${finalCollegeCode}! Opening College Portal...`);
           navigate('/college');
         } else {
           toast.success('Authenticated as National Moderator! Opening Control Center...');
@@ -157,13 +176,13 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       icon: GraduationCap,
       color: 'emerald',
       inputLabel: '12-Digit APAAR ID or Student Email',
-      inputPlaceholder: '9842-1083-4912 or student@srmeaswari.ac.in',
+      inputPlaceholder: '9842-1083-4912 or student@institute.ac.in',
       destination: 'Student APAAR Digital Card & ABC Credits',
       buttonBg: '#059669', // Emerald 600
       accentBorder: 'border-emerald-500',
-      feature1: 'View Verified APAAR Card with QR',
-      feature2: 'Track Academic Bank of Credits (ABC)',
-      feature3: 'Submit and track Grievance Queries'
+      feature1: 'Fill & Review All Your Student Details',
+      feature2: 'Instant Verhoeff-Verified Digital APAAR Card',
+      feature3: 'Academic Bank of Credits & Grievance Queries'
     },
     college: {
       title: 'College & University Portal Login',
@@ -171,14 +190,14 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       badgeClass: 'bg-blue-50 text-blue-800 border-blue-200',
       icon: Building2,
       color: 'blue',
-      inputLabel: 'AISHE Code or Institutional Nodal Email',
-      inputPlaceholder: 'nodal@srmeaswari.ac.in or C-16622',
-      destination: 'Bulk Ingestion & Sanctioned Intake Validation',
+      inputLabel: 'Institutional Nodal Officer Email',
+      inputPlaceholder: 'nodal@college.ac.in',
+      destination: 'College-Side Student Enrollment & AISHE Quota',
       buttonBg: '#1D4ED8', // Blue 700
       accentBorder: 'border-blue-500',
-      feature1: 'Bulk Student Ingestion (CSV / Excel)',
-      feature2: 'AICTE Sanctioned Intake Reconciliation',
-      feature3: 'Automated Verhoeff Algorithm Deduplication'
+      feature1: 'Login with Unique College Code (AISHE)',
+      feature2: 'College-Side Student Enrollment Form',
+      feature3: 'Sanctioned Intake Capacity Reconciliation'
     },
     moderator: {
       title: 'Moderator & State Admin Portal Login',
@@ -222,7 +241,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                 One Nation, One Student ID Platform
               </h1>
               <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
-                Automated Permanent Academic Account Registry (APAAR) verification engine. Authenticate through your dedicated portal to access certified student records, intake validation, and grievance moderation.
+                Automated Permanent Academic Account Registry (APAAR) verification engine. Authenticate through your dedicated portal to access certified student records, college intake validation, and grievance moderation.
               </p>
             </div>
 
@@ -248,10 +267,13 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   </div>
                   <div className="font-bold text-sm text-slate-900">Student</div>
                   <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    APAAR Card & ABC
+                    Sign in & fill details
                   </div>
                   {activePortal === 'student' && (
-                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+                    <span className="absolute top-3 right-3 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                    </span>
                   )}
                 </button>
 
@@ -270,10 +292,13 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   </div>
                   <div className="font-bold text-sm text-slate-900">College</div>
                   <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    Ingestion & Intake
+                    Unique college code
                   </div>
                   {activePortal === 'college' && (
-                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-blue-100" />
+                    <span className="absolute top-3 right-3 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                    </span>
                   )}
                 </button>
 
@@ -292,78 +317,76 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   </div>
                   <div className="font-bold text-sm text-slate-900">Moderator</div>
                   <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    Queries & Control
+                    Full control & queries
                   </div>
                   {activePortal === 'moderator' && (
-                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-purple-500 ring-4 ring-purple-100" />
+                    <span className="absolute top-3 right-3 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                    </span>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Portal Highlights Card */}
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <span>{config.title} Features</span>
+            {/* Portal Features Checklist */}
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
+              <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>Capabilities in {config.title}</span>
               </div>
-              <ul className="space-y-2 text-xs text-slate-700">
+              <ul className="space-y-2 text-xs text-slate-600">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   <span>{config.feature1}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   <span>{config.feature2}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   <span>{config.feature3}</span>
                 </li>
               </ul>
             </div>
 
-            {/* 1-Click Demo Fill Autofill */}
-            <div className="p-3.5 rounded-2xl bg-slate-900 text-white shadow-md flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs">
-                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="font-medium text-slate-200">
-                  Quick Demo Autofill:
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleDemoFill('student')}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition active:scale-95"
-                >
-                  🎓 Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDemoFill('college')}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition active:scale-95"
-                >
-                  🏛️ College
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDemoFill('moderator')}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition active:scale-95"
-                >
-                  🛡️ Moderator
-                </button>
-              </div>
+            {/* One-Click Quick Demo Autofill */}
+            <div className="pt-1 flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium">Quick Demo Autofill:</span>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('student')}
+                className="text-xs px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-semibold transition"
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('college')}
+                className="text-xs px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 font-semibold transition"
+              >
+                College
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoFill('moderator')}
+                className="text-xs px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 font-semibold transition"
+              >
+                Moderator
+              </button>
             </div>
           </div>
 
-          {/* Right Column: Active Portal Login Card (6 cols) */}
-          <div className="lg:col-span-6 w-full max-w-md mx-auto">
-            <Card className="p-6 sm:p-8 shadow-xl border-slate-200 bg-white rounded-3xl">
-              <div className="mb-6 space-y-2">
-                <div className="flex items-center justify-between">
+          {/* Right Column: Portal Login Card (6 cols) */}
+          <div className="lg:col-span-6">
+            <Card className="p-6 sm:p-8 shadow-xl border-slate-200/90 relative overflow-hidden">
+              
+              {/* Dynamic portal top header */}
+              <div className="flex items-center justify-between pb-5 mb-5 border-b border-slate-100">
+                <div>
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shadow-xs ${
+                    <div className={`p-2.5 rounded-xl ${
                       activePortal === 'student'
                         ? 'bg-emerald-100 text-emerald-700'
                         : activePortal === 'college'
@@ -378,9 +401,9 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                       </h2>
                       <p className="text-xs text-slate-500">
                         {activePortal === 'student'
-                          ? 'Easwari Engineering College (EEC)'
+                          ? 'Login to view your APAAR ID card or fill all your student details'
                           : activePortal === 'college'
-                          ? 'AISHE Node C-16622 • Anna University'
+                          ? 'College-side access with unique AISHE code verification'
                           : 'State & Central National Moderation Gateway'}
                       </p>
                     </div>
@@ -389,7 +412,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
                 <div className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-50 text-slate-700 border-slate-200">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Secured with Verhoeff Checksum & TLS</span>
+                  <span>Secured with Verhoeff & TLS</span>
                 </div>
               </div>
 
@@ -407,6 +430,50 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* For College Portal: Select or Enter Unique College Code */}
+                {activePortal === 'college' && (
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-blue-950 uppercase tracking-wide">
+                        College Unique Code (AISHE Code) <span className="text-rose-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomCollege(!isCustomCollege)}
+                        className="text-[11px] font-bold text-blue-700 hover:underline"
+                      >
+                        {isCustomCollege ? 'Select from list' : 'Enter other code'}
+                      </button>
+                    </div>
+
+                    {!isCustomCollege ? (
+                      <select
+                        value={selectedCollegeCode}
+                        onChange={(e) => setSelectedCollegeCode(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-blue-300 text-xs font-semibold bg-white text-slate-800 focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        {ACCREDITED_COLLEGES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} — {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. C-16622 or U-0456"
+                        value={customCollegeCode}
+                        onChange={(e) => setCustomCollegeCode(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-blue-300 text-xs font-mono font-bold bg-white text-blue-900 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    )}
+
+                    <p className="text-[10px] text-blue-800">
+                      Intake quotas and student records will be certified under this unique college code.
+                    </p>
+                  </div>
+                )}
+
                 <Input
                   label={config.inputLabel}
                   placeholder={config.inputPlaceholder}
@@ -418,35 +485,35 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                     }
                   }}
                   error={fieldErrors.identifier}
-                  leftIcon={activePortal === 'student' ? <GraduationCap className="w-4 h-4" /> : activePortal === 'college' ? <Building2 className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                  required
+                  leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
                 />
 
-                <div>
-                  <Input
-                    label={activePortal === 'moderator' ? 'Govt Passkey / Password' : 'Password'}
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Enter your secure password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (fieldErrors.password) {
-                        setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                      }
-                    }}
-                    error={fieldErrors.password}
-                    leftIcon={<Lock className="w-4 h-4" />}
-                    rightIcon={
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="text-slate-400 hover:text-slate-700 transition focus:outline-none"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    }
-                    required
-                  />
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Input
+                      label="Password / Security PIN"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) {
+                          setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                        }
+                      }}
+                      error={fieldErrors.password}
+                      leftIcon={<Lock className="w-4 h-4 text-slate-400" />}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 focus:outline-hidden"
+                      tabIndex={-1}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Remember Me & Help */}
@@ -489,14 +556,32 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                 </Button>
               </form>
 
+              {/* Special Prompt for Student Portal: Direct Fill Details option */}
+              {activePortal === 'student' && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await login('9842-1083-4912', 'student@2024', 'student');
+                      toast.success('Logged in as Student! Opening details form...');
+                      navigate('/student/details');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold transition flex items-center justify-center gap-2"
+                  >
+                    <GraduationCap className="w-4 h-4 text-emerald-700" />
+                    <span>First-time Student? Click to Fill Up Your Details</span>
+                  </button>
+                </div>
+              )}
+
               {/* Footer info */}
               <div className="mt-5 pt-4 border-t border-slate-100 text-center">
                 <p className="text-[11px] text-slate-400 font-medium">
                   {activePortal === 'moderator'
                     ? 'State Moderator has authority to resolve all student queries & review anomalies.'
                     : activePortal === 'college'
-                    ? 'College Nodal Officer can ingest batch datasets & monitor sanctioned quotas.'
-                    : 'Students can view official APAAR ID card, ABC credits, and raise queries.'}
+                    ? 'College side fills student records with unique AISHE code & validates intake quotas.'
+                    : 'Students can sign in, fill all personal & academic details, and download APAAR card.'}
                 </p>
               </div>
             </Card>

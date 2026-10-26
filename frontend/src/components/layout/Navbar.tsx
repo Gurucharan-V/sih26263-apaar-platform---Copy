@@ -120,16 +120,17 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
       <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         {/* Left: Brand & Portal Badge */}
         <div className="flex items-center gap-3">
-          <img
-            src="/assets/eec_college_logo.png"
-            alt="Easwari Engineering College & APAAR Crest"
-            className="w-10 h-10 object-contain bg-white rounded-full p-0.5 border border-slate-200 shadow-xs cursor-pointer"
-            onClick={() => navigate(effectiveRole === 'STUDENT' ? '/student' : effectiveRole === 'COLLEGE_NODAL' ? '/college' : '/admin')}
-          />
+          <div
+            onClick={() => navigate(user?.role === 'STUDENT' ? '/student' : user?.role === 'COLLEGE_NODAL' ? '/college' : user?.role === 'MODERATOR' ? '/admin' : '/login')}
+            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-900 to-blue-900 text-white flex items-center justify-center shadow-xs cursor-pointer border border-slate-700/50 hover:scale-105 transition"
+            title="National Academic Registry Portal"
+          >
+            <GraduationCap className="w-5 h-5 text-emerald-400" />
+          </div>
           <div>
             <div className="flex items-center gap-2">
               <span 
-                onClick={() => navigate(effectiveRole === 'STUDENT' ? '/student' : effectiveRole === 'COLLEGE_NODAL' ? '/college' : '/admin')}
+                onClick={() => navigate(user?.role === 'STUDENT' ? '/student' : user?.role === 'COLLEGE_NODAL' ? '/college' : user?.role === 'MODERATOR' ? '/admin' : '/login')}
                 className="font-bold text-slate-900 text-sm sm:text-base tracking-tight hover:text-blue-700 cursor-pointer"
               >
                 APAAR Data Platform
@@ -140,7 +141,7 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-medium truncate max-w-[200px] sm:max-w-xs">
-              Easwari Engineering College • Ministry of Education
+              {user?.institutionName || 'National Higher Education Gateway'} • Ministry of Education
             </p>
           </div>
         </div>
@@ -148,7 +149,13 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
         {/* Center: Portal Switcher Tabs */}
         <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
           <button
-            onClick={() => navigate('/student')}
+            onClick={() => {
+              if (user?.role === 'STUDENT') {
+                navigate('/student');
+              } else {
+                navigate('/login/student');
+              }
+            }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               location.pathname.startsWith('/student')
                 ? 'bg-white text-emerald-700 shadow-xs font-bold'
@@ -159,7 +166,13 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
             <span>Student Portal</span>
           </button>
           <button
-            onClick={() => navigate('/college')}
+            onClick={() => {
+              if (user?.role === 'COLLEGE_NODAL') {
+                navigate('/college');
+              } else {
+                navigate('/login/college');
+              }
+            }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               location.pathname.startsWith('/college')
                 ? 'bg-white text-blue-700 shadow-xs font-bold'
@@ -170,7 +183,13 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
             <span>College Portal</span>
           </button>
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => {
+              if (user?.role === 'MODERATOR') {
+                navigate('/admin');
+              } else {
+                navigate('/login/moderator');
+              }
+            }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
               location.pathname.startsWith('/admin')
                 ? 'bg-white text-purple-700 shadow-xs font-bold'
@@ -322,7 +341,7 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                     <h4 className="font-bold text-base text-white truncate">{displayName}</h4>
                   </div>
                   <p className="text-xs text-blue-300 font-mono truncate">
-                    {user?.email || (effectiveRole === 'STUDENT' ? 'student@srmeaswari.ac.in' : effectiveRole === 'COLLEGE_NODAL' ? 'nodal@srmeaswari.ac.in' : 'moderator@education.gov.in')}
+                    {user?.email || (effectiveRole === 'STUDENT' ? 'student@institute.ac.in' : effectiveRole === 'COLLEGE_NODAL' ? 'nodal@college.ac.in' : 'moderator@education.gov.in')}
                   </p>
                   <div className="mt-1.5 flex items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -337,8 +356,8 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
               <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1.5">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="text-slate-400">Institution:</span>
-                  <span className="font-semibold text-slate-100 text-right">
-                    {user?.institutionName || 'Easwari Engineering College (EEC)'}
+                  <span className="font-semibold text-slate-100 text-right truncate max-w-[180px]">
+                    {user?.institutionName || 'Affiliated Higher Education Institution'}
                   </span>
                 </div>
                 {user?.apaarId && (
@@ -373,7 +392,11 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                   <button
                     onClick={() => {
                       setIsMenuDrawerOpen(false);
-                      navigate('/student');
+                      if (user?.role === 'STUDENT') {
+                        navigate('/student');
+                      } else {
+                        navigate('/login/student');
+                      }
                     }}
                     className={`flex items-center justify-between p-3 rounded-xl border text-left transition ${
                       location.pathname.startsWith('/student')
@@ -398,7 +421,11 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                   <button
                     onClick={() => {
                       setIsMenuDrawerOpen(false);
-                      navigate('/college');
+                      if (user?.role === 'COLLEGE_NODAL') {
+                        navigate('/college');
+                      } else {
+                        navigate('/login/college');
+                      }
                     }}
                     className={`flex items-center justify-between p-3 rounded-xl border text-left transition ${
                       location.pathname.startsWith('/college')
@@ -412,7 +439,7 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                       </div>
                       <div>
                         <div className="font-bold text-sm">College Portal</div>
-                        <div className="text-xs text-slate-500">Bulk Ingestion, Capacity & Intake</div>
+                        <div className="text-xs text-slate-500">College-Side Ingestion & Unique AISHE Code</div>
                       </div>
                     </div>
                     {location.pathname.startsWith('/college') && (
@@ -423,7 +450,11 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                   <button
                     onClick={() => {
                       setIsMenuDrawerOpen(false);
-                      navigate('/admin');
+                      if (user?.role === 'MODERATOR') {
+                        navigate('/admin');
+                      } else {
+                        navigate('/login/moderator');
+                      }
                     }}
                     className={`flex items-center justify-between p-3 rounded-xl border text-left transition ${
                       location.pathname.startsWith('/admin')
@@ -440,9 +471,6 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                         <div className="text-xs text-slate-500">Control All Queries & Full System Access</div>
                       </div>
                     </div>
-                    {location.pathname.startsWith('/admin') && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white">Active</span>
-                    )}
                   </button>
                 </div>
               </div>

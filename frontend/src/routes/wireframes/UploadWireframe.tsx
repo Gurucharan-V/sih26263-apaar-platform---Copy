@@ -55,17 +55,15 @@ export default function UploadWireframe() {
 
           {/* Wireframe Header */}
           <div className="border-b-2 border-gray-300 pb-4 flex items-center gap-3">
-            <img
-              src="/assets/eec_college_logo.png"
-              alt="EEC Logo Seal"
-              className="w-10 h-10 rounded-full object-contain bg-white border border-black filter grayscale shrink-0"
-            />
+            <div className="w-10 h-10 rounded-full bg-slate-200 border border-black flex items-center justify-center font-bold text-xs shrink-0">
+              [INST]
+            </div>
             <div>
               <h1 className="text-base font-bold uppercase">
                 [TITLE]: Student Information & Document Upload
               </h1>
               <p className="text-xs text-gray-600 mt-0.5">
-                [SUBTITLE]: Easwari Engineering College (EEC) • AICTE Approved
+                [SUBTITLE]: Higher Education Institution • AICTE Approved
               </p>
             </div>
           </div>

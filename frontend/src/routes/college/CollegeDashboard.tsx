@@ -1,28 +1,39 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { UploadCloud, UserPlus, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
+import { UploadCloud, UserPlus, AlertTriangle, CheckCircle, FileText, Building2, Hash } from 'lucide-react';
 import { StatCard } from '../../components/charts/StatCard';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function CollegeDashboard() {
+  const { user } = useAuth();
+  const collegeName = user?.institutionName || 'National Institute of Technology & Engineering';
+  const collegeCode = user?.aisheCode || 'C-16622';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">College Ingestion Portal</h1>
-          <p className="text-sm text-slate-500">Vellore Institute of Technology (AISHE: C-36965)</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900">College Administration Portal</h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-mono font-bold">
+              <Hash className="w-3 h-3" />
+              <span>AISHE: {collegeCode}</span>
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 mt-0.5">{collegeName}</p>
         </div>
         <div className="flex gap-3">
           <Link
-            to="/college/upload"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"
+            to="/college/students/new"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition"
           >
-            <UploadCloud className="w-4 h-4" /> Bulk Upload CSV
+            <UserPlus className="w-4 h-4" /> Register Student (College Side)
           </Link>
           <Link
-            to="/college/students/new"
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"
+            to="/college/upload"
+            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border px-4 py-2 rounded-xl text-sm font-medium shadow-xs transition"
           >
-            <UserPlus className="w-4 h-4" /> Add Student
+            <UploadCloud className="w-4 h-4" /> Bulk Upload CSV
           </Link>
         </div>
       </div>

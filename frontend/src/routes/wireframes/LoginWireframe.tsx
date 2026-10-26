@@ -65,17 +65,15 @@ export default function LoginWireframe() {
               {/* Logo & Header Box */}
               <div className="border-2 border-gray-400 p-3 bg-white space-y-1">
                 <div className="flex items-center gap-2.5">
-                  <img
-                    src="/assets/eec_college_logo.png"
-                    alt="EEC Logo Seal"
-                    className="w-9 h-9 rounded-full object-contain bg-white border border-black filter grayscale"
-                  />
+                  <div className="w-9 h-9 rounded-full bg-slate-200 border border-black flex items-center justify-center font-bold text-xs">
+                    [INST]
+                  </div>
                   <div className="text-sm font-bold uppercase">
                     Student Data Verification Portal
                   </div>
                 </div>
                 <div className="text-[11px] text-gray-600">
-                  Easwari Engineering College (EEC) • AICTE Approved
+                  Higher Education Institution • AICTE Approved
                 </div>
               </div>
 

@@ -8,6 +8,7 @@ import UploadPage from './routes/college/UploadPage';
 
 // Student Portal Routes
 import StudentDashboard from './routes/student/StudentDashboard';
+import StudentDetailsForm from './routes/student/StudentDetailsForm';
 import StudentQueries from './routes/student/StudentQueries';
 import StudentCredits from './routes/student/StudentCredits';
 import StudentDocuments from './routes/student/StudentDocuments';
@@ -47,6 +48,7 @@ export default function App() {
       {/* 1. Student Portal Layout */}
       <Route path="/student" element={<Layout portal="student" />}>
         <Route index element={<StudentDashboard />} />
+        <Route path="details" element={<StudentDetailsForm />} />
         <Route path="queries" element={<StudentQueries />} />
         <Route path="credits" element={<StudentCredits />} />
         <Route path="documents" element={<StudentDocuments />} />

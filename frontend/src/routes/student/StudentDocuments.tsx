@@ -6,8 +6,8 @@ export default function StudentDocuments() {
   const docs = [
     { name: 'Class X Secondary School Certificate', issuer: 'CBSE / State Board', docId: 'DOC-CBSE-99120', date: '2020', status: 'VERIFIED_DIGILOCKER' },
     { name: 'Class XII Higher Secondary Marksheet', issuer: 'CBSE / State Board', docId: 'DOC-HSC-44912', date: '2022', status: 'VERIFIED_DIGILOCKER' },
-    { name: 'Easwari Eng College Admission Allotment Order', issuer: 'TNEA / Anna University', docId: 'DOC-TNEA-2022-89', date: '2022', status: 'SANCTIONED_INTAKE_CONFIRMED' },
-    { name: 'Consolidated Semester Marksheet (Sem 1-4)', issuer: 'EEC Autonomous / Anna Univ', docId: 'DOC-EEC-2024-SEM4', date: '2024', status: 'VERIFIED_DIGILOCKER' }
+    { name: 'Institution Admission Allotment Order', issuer: 'Central / State Admissions Authority', docId: 'DOC-ALLOT-2022-89', date: '2022', status: 'SANCTIONED_INTAKE_CONFIRMED' },
+    { name: 'Consolidated Semester Marksheet (Sem 1-4)', issuer: 'Affiliated University Examinations Board', docId: 'DOC-UNIV-2024-SEM4', date: '2024', status: 'VERIFIED_DIGILOCKER' }
   ];
 
   return (

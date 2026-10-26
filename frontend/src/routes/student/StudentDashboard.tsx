@@ -57,32 +57,63 @@ export default function StudentDashboard() {
             <span>AICTE & DigiLocker Verified Student Record</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Welcome back, {studentName}
+            Welcome, {studentName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300">
-            {programme} • {institution}
+            {programme} • {institution} (AISHE: {user?.aisheCode || 'C-16622'})
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
+            onClick={() => navigate('/student/details')}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span>Fill Up / Edit My Details</span>
+          </button>
+          <button
             onClick={() => navigate('/student/queries')}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-sm transition flex items-center gap-2"
           >
             <HelpCircle className="w-4 h-4 text-emerald-300" />
-            <span>Raise Query / Grievance</span>
+            <span>Raise Grievance</span>
           </button>
           <button
             onClick={() => {
               toast.success('APAAR Digital Card downloaded as PDF!');
             }}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             <span>Download APAAR Card</span>
           </button>
         </div>
       </div>
+
+      {/* Profile Completion Prompt if details are not yet completed */}
+      {!user?.detailsCompleted && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-200/60 text-amber-800">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Complete Your Student Profile</h3>
+              <p className="text-xs text-amber-800/80">
+                Please fill in all your personal and academic details to complete official registration.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/student/details')}
+            className="px-4 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <span>Fill Details Now</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Grid: Official Digital APAAR Card (Left) & Quick Academic Stats (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -101,22 +132,16 @@ export default function StudentDashboard() {
           {/* Realistic High-Security APAAR Card */}
           <div className="relative rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-2xl border border-slate-700/80 overflow-hidden">
             {/* Background Watermark Crest */}
-            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-10 translate-y-10">
-              <img
-                src="/assets/eec_college_logo.png"
-                alt="Watermark Crest"
-                className="w-80 h-80 object-contain"
-              />
+            <div className="absolute right-0 bottom-0 opacity-5 pointer-events-none translate-x-10 translate-y-10">
+              <GraduationCap className="w-80 h-80" />
             </div>
 
             {/* Card Header */}
             <div className="flex items-center justify-between border-b border-white/15 pb-4 mb-4">
               <div className="flex items-center gap-3">
-                <img
-                  src="/assets/eec_college_logo.png"
-                  alt="EEC Crest"
-                  className="w-12 h-12 object-contain bg-white rounded-full p-1 shadow-md"
-                />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-md">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide">
                     GOVERNMENT OF INDIA
@@ -209,7 +234,7 @@ export default function StudentDashboard() {
 
             {/* Card Footer Bar */}
             <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-              <span>AISHE: C-16622 • Anna University Chennai</span>
+              <span>AISHE: {user?.aisheCode || 'C-16622'} • {user?.institutionName || 'Affiliated Higher Education Institution'}</span>
               <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                 <ShieldCheck className="w-3 h-3" /> Verhoeff Checksum Valid
               </span>
