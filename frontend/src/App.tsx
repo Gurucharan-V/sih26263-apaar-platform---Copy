@@ -2,24 +2,26 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 
-// Polished routes
-import CollegeLogin from './routes/college/Login';
+// Portals & Login
+import Login from './routes/college/Login';
 import UploadPage from './routes/college/UploadPage';
 
-// Low-fi Wireframe & Error routes
-import LoginWireframe from './routes/wireframes/LoginWireframe';
-import UploadWireframe from './routes/wireframes/UploadWireframe';
-import ErrorStatesShowcase from './routes/wireframes/ErrorStatesShowcase';
+// Student Portal Routes
+import StudentDashboard from './routes/student/StudentDashboard';
+import StudentQueries from './routes/student/StudentQueries';
+import StudentCredits from './routes/student/StudentCredits';
+import StudentDocuments from './routes/student/StudentDocuments';
 
-// College Portal existing routes
+// College Portal Routes
 import CollegeDashboard from './routes/college/CollegeDashboard';
 import StudentForm from './routes/college/StudentForm';
 import BulkUpload from './routes/college/BulkUpload';
 import ValidationErrors from './routes/college/ValidationErrors';
 import UploadHistory from './routes/college/UploadHistory';
 
-// Admin Portal routes
+// Moderator / Admin Portal Routes
 import AdminDashboard from './routes/admin/AdminDashboard';
+import QueryControlCenter from './routes/admin/QueryControlCenter';
 import InstitutionTable from './routes/admin/InstitutionTable';
 import IntakeDiscrepancies from './routes/admin/IntakeDiscrepancies';
 import CaseQueue from './routes/admin/CaseQueue';
@@ -31,20 +33,26 @@ import Reports from './routes/admin/Reports';
 export default function App() {
   return (
     <Routes>
-      {/* Default Landing: Polished High-Fi Login Page */}
+      {/* Default Landing: Multi-Portal Login Page */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<CollegeLogin />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/login/student" element={<Login defaultPortal="student" />} />
+      <Route path="/login/college" element={<Login defaultPortal="college" />} />
+      <Route path="/login/moderator" element={<Login defaultPortal="moderator" />} />
+      <Route path="/login/admin" element={<Login defaultPortal="moderator" />} />
 
-      {/* Student Information & Document Upload Page */}
+      {/* Student Data Upload Page */}
       <Route path="/upload" element={<UploadPage />} />
 
-      {/* Low-Fidelity Figma Wireframes & Error Showcase */}
-      <Route path="/wireframes/login" element={<LoginWireframe />} />
-      <Route path="/wireframes/upload" element={<UploadWireframe />} />
-      <Route path="/wireframes/errors" element={<ErrorStatesShowcase />} />
-      <Route path="/errors" element={<ErrorStatesShowcase />} />
+      {/* 1. Student Portal Layout */}
+      <Route path="/student" element={<Layout portal="student" />}>
+        <Route index element={<StudentDashboard />} />
+        <Route path="queries" element={<StudentQueries />} />
+        <Route path="credits" element={<StudentCredits />} />
+        <Route path="documents" element={<StudentDocuments />} />
+      </Route>
 
-      {/* College Portal Layout */}
+      {/* 2. College Portal Layout */}
       <Route path="/college" element={<Layout portal="college" />}>
         <Route index element={<CollegeDashboard />} />
         <Route path="students/new" element={<StudentForm />} />
@@ -53,9 +61,10 @@ export default function App() {
         <Route path="history" element={<UploadHistory />} />
       </Route>
 
-      {/* Admin Portal Layout */}
+      {/* 3. Moderator / Admin Portal Layout */}
       <Route path="/admin" element={<Layout portal="admin" />}>
         <Route index element={<AdminDashboard />} />
+        <Route path="queries" element={<QueryControlCenter />} />
         <Route path="institutions" element={<InstitutionTable />} />
         <Route path="intake" element={<IntakeDiscrepancies />} />
         <Route path="cases" element={<CaseQueue />} />
@@ -65,6 +74,10 @@ export default function App() {
         <Route path="reports" element={<Reports />} />
       </Route>
 
+      {/* Moderator alias route */}
+      <Route path="/moderator/*" element={<Navigate to="/admin" replace />} />
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

@@ -1,0 +1,321 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  CreditCard, 
+  Award, 
+  FileCheck2, 
+  HelpCircle, 
+  QrCode, 
+  ShieldCheck, 
+  Copy, 
+  Check, 
+  ExternalLink, 
+  GraduationCap, 
+  Building2, 
+  Calendar, 
+  CheckCircle2, 
+  Download,
+  Share2,
+  Sparkles,
+  ChevronRight
+} from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { useQueries } from '../../hooks/useQueries';
+import toast from 'react-hot-toast';
+
+export default function StudentDashboard() {
+  const { user } = useAuth();
+  const { queries } = useQueries();
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+
+  const studentName = user?.name || 'Rohan Sundaram';
+  const apaarId = user?.apaarId || '9842-1083-4912';
+  const rollNo = user?.rollNo || 'EEC2024CS042';
+  const institution = user?.institutionName || 'Easwari Engineering College (EEC)';
+  const programme = user?.department || 'B.E. Computer Science and Engineering';
+
+  // Filter queries belonging to this student
+  const studentQueries = queries.filter(
+    (q) => q.apaarId === apaarId || q.studentName.toLowerCase() === studentName.toLowerCase()
+  );
+
+  const handleCopyApaar = () => {
+    navigator.clipboard.writeText(apaarId);
+    setCopied(true);
+    toast.success('APAAR ID copied to clipboard!');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top Welcome Banner */}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-900 via-slate-900 to-blue-950 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>AICTE & DigiLocker Verified Student Record</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Welcome back, {studentName}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-300">
+            {programme} • {institution}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => navigate('/student/queries')}
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-sm transition flex items-center gap-2"
+          >
+            <HelpCircle className="w-4 h-4 text-emerald-300" />
+            <span>Raise Query / Grievance</span>
+          </button>
+          <button
+            onClick={() => {
+              toast.success('APAAR Digital Card downloaded as PDF!');
+            }}
+            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download APAAR Card</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Grid: Official Digital APAAR Card (Left) & Quick Academic Stats (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left: The Official APAAR Digital ID Card (7 cols) */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-emerald-600" />
+              <span>Official Digital APAAR Card</span>
+            </h2>
+            <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-bold border border-emerald-200">
+              VERHOEFF VERIFIED
+            </span>
+          </div>
+
+          {/* Realistic High-Security APAAR Card */}
+          <div className="relative rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white p-6 shadow-2xl border border-slate-700/80 overflow-hidden">
+            {/* Background Watermark Crest */}
+            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-10 translate-y-10">
+              <img
+                src="/assets/eec_college_logo.png"
+                alt="Watermark Crest"
+                className="w-80 h-80 object-contain"
+              />
+            </div>
+
+            {/* Card Header */}
+            <div className="flex items-center justify-between border-b border-white/15 pb-4 mb-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/assets/eec_college_logo.png"
+                  alt="EEC Crest"
+                  className="w-12 h-12 object-contain bg-white rounded-full p-1 shadow-md"
+                />
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide">
+                    GOVERNMENT OF INDIA
+                  </h3>
+                  <p className="text-[11px] text-blue-200 font-medium">
+                    Ministry of Education • Automated Permanent Academic Account Registry
+                  </p>
+                </div>
+              </div>
+              <div className="text-right hidden sm:block">
+                <span className="text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-full font-bold">
+                  NATIONAL APAAR ID
+                </span>
+              </div>
+            </div>
+
+            {/* Card Body */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+              {/* Photo & QR Code */}
+              <div className="sm:col-span-4 flex sm:flex-col items-center gap-3">
+                <div className="w-24 h-28 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-600 border-2 border-emerald-400/80 p-1 shadow-lg relative flex items-center justify-center">
+                  <div className="w-full h-full rounded-xl bg-slate-800 flex flex-col items-center justify-center text-center p-1">
+                    <span className="text-3xl">👨‍🎓</span>
+                    <span className="text-[9px] text-slate-300 font-semibold mt-1">Verified Photo</span>
+                  </div>
+                  <div className="absolute -bottom-2 -right-1 bg-emerald-500 text-white p-1 rounded-full shadow">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+
+                <div className="p-2 bg-white rounded-xl shadow text-slate-900 flex flex-col items-center justify-center">
+                  <QrCode className="w-12 h-12 text-slate-900" />
+                  <span className="text-[8px] font-mono font-bold text-slate-600 mt-0.5">SECURE QR</span>
+                </div>
+              </div>
+
+              {/* Student Metadata */}
+              <div className="sm:col-span-8 space-y-3">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                    Student Full Name
+                  </span>
+                  <div className="text-lg font-extrabold text-white">{studentName}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                      Enrolment / Roll No
+                    </span>
+                    <span className="font-mono font-bold text-blue-300">{rollNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                      Academic Year
+                    </span>
+                    <span className="font-semibold text-slate-200">2024 - 2028</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                    Accredited Institution
+                  </span>
+                  <span className="font-semibold text-slate-200 text-xs block leading-snug">
+                    {institution}
+                  </span>
+                </div>
+
+                {/* The 12-Digit APAAR ID */}
+                <div className="pt-2 border-t border-white/10">
+                  <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mb-1">
+                    APAAR (12-Digit Academic Identifier)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xl sm:text-2xl font-black text-white tracking-widest drop-shadow">
+                      {apaarId}
+                    </span>
+                    <button
+                      onClick={handleCopyApaar}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition active:scale-95"
+                      title="Copy APAAR ID"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Footer Bar */}
+            <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <span>AISHE: C-16622 • Anna University Chennai</span>
+              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                <ShieldCheck className="w-3 h-3" /> Verhoeff Checksum Valid
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Academic Bank of Credits (ABC) & Status (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Award className="w-4 h-4 text-blue-600" />
+            <span>Academic Bank of Credits (ABC)</span>
+          </h2>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-400 font-medium">Total Credits Earned</span>
+                <div className="text-3xl font-extrabold text-blue-900">128 / 160</div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-slate-400 font-medium">Cumulative GPA</span>
+                <div className="text-3xl font-extrabold text-emerald-600">8.92</div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-semibold text-slate-600">
+                <span>Degree Completion</span>
+                <span>80%</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-emerald-500 h-full rounded-full w-4/5" />
+              </div>
+            </div>
+
+            {/* Digilocker Sync Badge */}
+            <div className="p-3.5 bg-blue-50/70 rounded-2xl border border-blue-200 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2.5">
+                <FileCheck2 className="w-5 h-5 text-blue-600" />
+                <div>
+                  <div className="font-bold text-blue-950">DigiLocker Synced</div>
+                  <div className="text-[11px] text-blue-700">4 Certificates Verified</div>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/student/documents')}
+                className="text-blue-700 font-bold hover:underline inline-flex items-center gap-0.5"
+              >
+                View <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Grievance Queries Status */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  My Active Queries & Grievances
+                </h4>
+                <button
+                  onClick={() => navigate('/student/queries')}
+                  className="text-xs font-bold text-purple-700 hover:underline"
+                >
+                  Manage All
+                </button>
+              </div>
+
+              {studentQueries.length === 0 ? (
+                <div className="p-3 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+                  No active queries. All records in sync!
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {studentQueries.slice(0, 2).map((q) => (
+                    <div
+                      key={q.id}
+                      onClick={() => navigate('/student/queries')}
+                      className="p-3 rounded-xl bg-slate-50 hover:bg-purple-50/50 border border-slate-200 transition cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-[11px] font-bold text-purple-700">{q.id}</span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            q.status === 'RESOLVED'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {q.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-800 font-medium truncate">{q.subject}</p>
+                      {q.moderatorNotes && (
+                        <p className="text-[11px] text-emerald-700 font-medium mt-1 truncate">
+                          💬 Moderator: {q.moderatorNotes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

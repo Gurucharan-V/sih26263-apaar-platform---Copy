@@ -19,7 +19,7 @@ import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { UploadArea } from '../../components/ui/UploadArea';
-import { PrototypeBanner } from '../../components/ui/PrototypeBanner';
+import { Navbar } from '../../components/layout/Navbar';
 import toast from 'react-hot-toast';
 
 export default function UploadPage() {
@@ -140,8 +140,7 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface font-sans selection:bg-blue-200 selection:text-slate-900">
-      {/* Top Prototype Navigation Banner */}
-      <PrototypeBanner />
+      <Navbar portal="college" />
 
       {/* Header Bar */}
       <header className="bg-white border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
