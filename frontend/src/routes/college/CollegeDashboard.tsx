@@ -177,6 +177,88 @@ export default function CollegeDashboard() {
         <StatCard title="Flagged Anomalies" value="12" change="Requires Correction" icon={AlertTriangle} color="rose" />
       </div>
 
+      {/* Statutory Directives & AICTE Intake Notices from Moderator */}
+      {(() => {
+        try {
+          const noticesMap = JSON.parse(localStorage.getItem('apaar_issued_notices') || '{}');
+          const noticesList = Object.values(noticesMap) as any[];
+          const relevantNotices = noticesList.filter(
+            (n) => n.collegeCode === collegeCode || n.institution.toLowerCase().includes(collegeName.toLowerCase()) || n.collegeCode === 'C-18491'
+          );
+
+          if (relevantNotices.length === 0) return null;
+
+          return (
+            <div className="p-6 bg-gradient-to-r from-rose-50 via-white to-amber-50 rounded-2xl border-2 border-rose-300 shadow-md space-y-4">
+              <div className="flex items-center justify-between border-b border-rose-200 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 bg-rose-600 text-white rounded-xl shadow-xs">
+                    <AlertTriangle className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-base text-rose-950">
+                      Statutory Show-Cause Directives from AICTE Moderator ({relevantNotices.length})
+                    </h3>
+                    <p className="text-xs text-rose-800">
+                      Formal intake ceiling compliance directives dispatched under Section 10(k) AICTE Act
+                    </p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 bg-rose-600 text-white rounded-full text-xs font-black animate-pulse">
+                  ACTION REQUIRED
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {relevantNotices.map((n, i) => (
+                  <div key={i} className="p-4 bg-white rounded-xl border border-rose-200 shadow-xs space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="font-mono text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                          {n.noticeRef}
+                        </span>
+                        <h4 className="font-bold text-sm text-slate-900 mt-1">
+                          Intake Ceiling Breach in {n.programme}
+                        </h4>
+                      </div>
+                      <div className="text-right text-xs text-slate-500">
+                        <div>Issued: {n.issuedAt}</div>
+                        <div className="text-rose-700 font-bold">Window: Within {n.deadlineDays} Calendar Days</div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-700 font-mono bg-slate-50 p-2.5 rounded-lg border border-slate-200 leading-relaxed">
+                      {n.remarks}
+                    </p>
+                    <div className="pt-2 flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          sendNotification({
+                            title: `College Acknowledgment: ${n.noticeRef}`,
+                            message: `${collegeName} (${collegeCode}) has acknowledged receipt of statutory notice ${n.noticeRef}. Certified admission roster & justification submitted for review.`,
+                            targetRole: 'MODERATOR',
+                            sender: `${collegeName} Nodal Officer`,
+                            senderRole: 'COLLEGE_NODAL',
+                            type: 'info',
+                            actionUrl: '/admin/intake'
+                          });
+                          toast.success(`Compliance acknowledgment dispatched to AICTE Moderator for ${n.noticeRef}!`);
+                        }}
+                        className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1.5"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Acknowledge & Submit Response to Moderator</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        } catch {
+          return null;
+        }
+      })()}
+
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-base font-semibold text-slate-900 mb-4">Quick Batch Actions & Guidelines</h2>
         <div className="grid md:grid-cols-3 gap-4 text-sm">

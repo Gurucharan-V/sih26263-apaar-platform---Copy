@@ -51,32 +51,52 @@ export function useAuth() {
     let mockUser: UserSession;
 
     if (portalRole === 'student' || emailOrId.includes('student') || /^\d{4}/.test(emailOrId)) {
+      const cleanInputDigits = emailOrId.replace(/[^0-9]/g, '');
+      const assignedApaar = cleanInputDigits.length === 12
+        ? `${cleanInputDigits.slice(0, 4)}-${cleanInputDigits.slice(4, 8)}-${cleanInputDigits.slice(8, 12)}`
+        : (emailOrId.includes('-') && emailOrId.length >= 12 ? emailOrId : '9842-1083-4912');
+
+      // Check if student was previously saved or registered
+      let existingProfile: any = null;
+      try {
+        const savedStudents = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
+        existingProfile = savedStudents.find((s: any) => s.apaarId === assignedApaar || s.email === emailOrId);
+      } catch {}
+
+      // Calculate distinct DOB based on digits if not from existing profile
+      const seed = parseInt(cleanInputDigits.slice(6, 10), 10) || 514;
+      const calcMonth = String((seed % 12) + 1).padStart(2, '0');
+      const calcDay = String((seed % 28) + 1).padStart(2, '0');
+      const calcYear = 2003 + (seed % 3);
+      const derivedDob = existingProfile?.dob || `${calcYear}-${calcMonth}-${calcDay}`;
+      const derivedName = existingProfile?.name || (emailOrId.includes('@') ? emailOrId.split('@')[0].replace(/[._]/g, ' ') : 'Rohan Sundaram');
+
       mockUser = {
-        email: emailOrId.includes('@') ? emailOrId : 'rohan.sundaram@institute.ac.in',
-        name: 'Rohan Sundaram',
+        email: emailOrId.includes('@') ? emailOrId : (existingProfile?.email || 'rohan.sundaram@institute.ac.in'),
+        name: derivedName,
         role: 'STUDENT',
         token: 'jwt_student_sih26263',
-        apaarId: '9842-1083-4912',
-        rollNo: '2024CS042',
-        institutionName: 'National Institute of Technology & Higher Education',
-        aisheCode: 'C-16622',
-        department: 'Computer Science and Engineering',
-        degree: 'B.Tech - Computer Science',
-        dob: '2004-05-14',
-        gender: 'Male',
-        bloodGroup: 'O+',
-        fatherName: 'Sundaram Krishnamurthy',
-        motherName: 'Lakshmi Sundaram',
-        aadhaarMasked: 'XXXX-XXXX-4912',
-        address: 'No. 42, Anna Nagar West',
-        city: 'Chennai',
-        state: 'Tamil Nadu',
-        pincode: '600040',
-        admissionYear: '2024',
-        semester: 'Semester 4',
-        abcId: 'ABC-102-984-219',
-        phone: '+91 98765 43210',
-        detailsCompleted: false // Prompts student to review/fill their details
+        apaarId: assignedApaar,
+        rollNo: existingProfile?.rollNo || `2024CS${String(seed % 100).padStart(3, '0')}`,
+        institutionName: existingProfile?.institutionName || 'National Institute of Technology & Higher Education',
+        aisheCode: existingProfile?.aisheCode || 'C-16622',
+        department: existingProfile?.department || 'Computer Science and Engineering',
+        degree: existingProfile?.degree || 'B.Tech - Computer Science',
+        dob: derivedDob,
+        gender: existingProfile?.gender || 'Male',
+        bloodGroup: existingProfile?.bloodGroup || 'O+',
+        fatherName: existingProfile?.fatherName || 'Sundaram Krishnamurthy',
+        motherName: existingProfile?.motherName || 'Lakshmi Sundaram',
+        aadhaarMasked: existingProfile?.aadhaarMasked || `XXXX-XXXX-${assignedApaar.slice(-4)}`,
+        address: existingProfile?.address || 'No. 42, Anna Nagar West',
+        city: existingProfile?.city || 'Chennai',
+        state: existingProfile?.state || 'Tamil Nadu',
+        pincode: existingProfile?.pincode || '600040',
+        admissionYear: existingProfile?.admissionYear || '2024',
+        semester: existingProfile?.semester || 'Semester 4',
+        abcId: existingProfile?.abcId || `ABC-${assignedApaar.replace(/[^0-9]/g, '').slice(0, 9)}`,
+        phone: existingProfile?.phone || '+91 98765 43210',
+        detailsCompleted: !!existingProfile?.detailsCompleted
       };
     } else if (portalRole === 'moderator' || emailOrId.includes('admin') || emailOrId.includes('moderator')) {
       mockUser = {
@@ -116,6 +136,15 @@ export function useAuth() {
     const updated = { ...user, ...updates, detailsCompleted: true };
     localStorage.setItem('apaar_auth', JSON.stringify(updated));
     setUser(updated);
+
+    // Also persist into registered students
+    try {
+      const saved = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
+      const filtered = saved.filter((s: any) => s.apaarId !== updated.apaarId);
+      filtered.push(updated);
+      localStorage.setItem('apaar_registered_students', JSON.stringify(filtered));
+    } catch {}
+
     return updated;
   };
 

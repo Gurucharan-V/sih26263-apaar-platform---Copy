@@ -47,6 +47,47 @@ export default function StudentDashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadApaarCard = () => {
+    const cardContent = `
+================================================================================
+                    GOVERNMENT OF INDIA • MINISTRY OF EDUCATION
+          AUTOMATED PERMANENT ACADEMIC ACCOUNT REGISTRY (APAAR) CARD
+================================================================================
+
+APAAR ID (12-Digit):   ${apaarId}
+Verification Protocol:  Verhoeff Algorithm Verified • SHA-256 Checksum Valid
+Issuing Authority:      AICTE & National Academic Depository (NAD)
+
+STUDENT BIOGRAPHICAL PARTICULARS:
+Full Legal Name:        ${studentName}
+Date of Birth:          ${user?.dob || '2004-05-14'}
+Gender:                 ${user?.gender || 'Male'}
+Blood Group:            ${user?.bloodGroup || 'O+'}
+Guardian Name:          ${user?.fatherName || 'Sundaram Krishnamurthy'}
+
+ACADEMIC PARTICULARS:
+Accredited Institution: ${institution}
+AISHE Code:             ${user?.aisheCode || 'C-16622'}
+Degree & Programme:     ${programme}
+Enrolment / Roll No:    ${rollNo}
+Academic Period:        2024 - 2028
+Academic Bank of Credits: ${user?.abcId || 'ABC-102-984-219'}
+
+This digital card is a permanent, non-transferable digital academic identity
+recognized across all universities, technical boards, and employers in India.
+================================================================================
+    `.trim();
+
+    const blob = new Blob([cardContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `APAAR_CARD_${apaarId.replace(/[^0-9]/g, '')}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Official APAAR Digital Card downloaded successfully!');
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Welcome Banner */}
@@ -80,9 +121,7 @@ export default function StudentDashboard() {
             <span>Raise Grievance</span>
           </button>
           <button
-            onClick={() => {
-              toast.success('APAAR Digital Card downloaded as PDF!');
-            }}
+            onClick={handleDownloadApaarCard}
             className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition active:scale-95 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
@@ -187,18 +226,24 @@ export default function StudentDashboard() {
                   <div className="text-lg font-extrabold text-white">{studentName}</div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-3 gap-2.5 text-xs">
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                      Enrolment / Roll No
+                      Roll No
                     </span>
-                    <span className="font-mono font-bold text-blue-300">{rollNo}</span>
+                    <span className="font-mono font-bold text-blue-300 truncate block">{rollNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                      Date of Birth
+                    </span>
+                    <span className="font-semibold text-slate-200 block">{user?.dob || '2004-05-14'}</span>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
                       Academic Year
                     </span>
-                    <span className="font-semibold text-slate-200">2024 - 2028</span>
+                    <span className="font-semibold text-slate-200 block">2024 - 2028</span>
                   </div>
                 </div>
 

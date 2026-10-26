@@ -96,6 +96,28 @@ export default function StudentForm() {
         quota: formData.admissionQuota
       });
 
+      try {
+        const saved = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
+        saved.push({
+          name: formData.name,
+          apaarId: generatedApaar,
+          rollNo: formData.rollNo,
+          dob: formData.dob || '2004-03-12',
+          institutionName: collegeName,
+          aisheCode: collegeCode,
+          department: formData.degree,
+          degree: formData.degree,
+          email: formData.email,
+          phone: formData.contactPhone,
+          gender: formData.gender,
+          bloodGroup: 'O+',
+          fatherName: formData.guardianName,
+          motherName: '',
+          detailsCompleted: true
+        });
+        localStorage.setItem('apaar_registered_students', JSON.stringify(saved));
+      } catch {}
+
       // 1. Notify Moderator of new college admission and quota intake update
       sendNotification({
         title: `College Admission Enrolled (${collegeCode})`,

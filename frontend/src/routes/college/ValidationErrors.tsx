@@ -12,6 +12,18 @@ export default function ValidationErrors() {
     { row: 41, field: 'contactPhone', value: '12345', error: 'Phone number must be 10 digits' },
   ];
 
+  const handleDownloadCsv = () => {
+    const csvContent = "Row,Field,Received Value,Rule Violation\n" +
+      mockErrors.map(e => `${e.row},"${e.field}","${e.value}","${e.error}"`).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `validation_errors_${uploadId || 'batch'}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -19,7 +31,10 @@ export default function ValidationErrors() {
           <h1 className="text-xl font-bold text-slate-900">Ingestion Audit Report</h1>
           <p className="text-sm text-slate-500">Batch ID: <span className="font-mono text-xs">{uploadId}</span></p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">
+        <button 
+          onClick={handleDownloadCsv}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 shadow-xs transition active:scale-95"
+        >
           <Download className="w-4 h-4" /> Download Error CSV
         </button>
       </div>
