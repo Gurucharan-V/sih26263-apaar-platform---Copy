@@ -514,6 +514,58 @@ export function saveCollegeStudents(collegeCode: string, students: CollegeStuden
 }
 
 /**
+ * Synchronize student profile update into the corresponding college's student roster
+ */
+export function syncStudentToCollegeRoster(student: {
+  apaarId: string;
+  name: string;
+  rollNo?: string;
+  aisheCode: string;
+  dob?: string;
+  gender?: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  guardianName?: string;
+  admissionYear?: string;
+}): void {
+  const norm = (student.aisheCode || 'C-18491').trim().toUpperCase();
+  const collegeInfo = getCollegeDetails(norm);
+  const currentStudents = getCollegeStudents(norm);
+  const cleanApaar = student.apaarId.replace(/[^0-9]/g, '');
+
+  const existingIndex = currentStudents.findIndex(
+    (s) => s.apaarId.replace(/[^0-9]/g, '') === cleanApaar
+  );
+
+  const studentRecord: CollegeStudentRecord = {
+    id: existingIndex >= 0 ? currentStudents[existingIndex].id : `STU-${collegeInfo.shortName}-${Math.floor(100 + Math.random() * 900)}`,
+    name: student.name,
+    apaarId: student.apaarId,
+    dateOfBirth: student.dob || '2004-05-14',
+    gender: (['male', 'female', 'other'].includes(String(student.gender).toLowerCase()) ? String(student.gender).toLowerCase() : 'male') as any,
+    guardianName: student.guardianName || 'Parent / Guardian',
+    email: student.email || `${student.name.toLowerCase().replace(/\s+/g, '.')}@${collegeInfo.shortName.toLowerCase()}.edu.in`,
+    contactPhone: (student.phone || '9876543210').replace(/[^0-9]/g, '').slice(0, 10),
+    programmeId: student.department || collegeInfo.programmes[0] || 'BTECH-CSE',
+    enrollmentYear: student.admissionYear || '2024',
+    rollNo: student.rollNo || `${collegeInfo.shortName}2024CS042`,
+    aisheCode: norm,
+    status: 'VERIFIED',
+    batchId: 'Direct Student Registration',
+    uploadedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+  };
+
+  if (existingIndex >= 0) {
+    currentStudents[existingIndex] = { ...currentStudents[existingIndex], ...studentRecord };
+  } else {
+    currentStudents.unshift(studentRecord);
+  }
+
+  saveCollegeStudents(norm, currentStudents);
+}
+
+/**
  * Append newly uploaded bulk student records to a college's file set
  */
 export function addUploadedStudentsToCollege(

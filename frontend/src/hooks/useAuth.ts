@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type UserRole = 'STUDENT' | 'COLLEGE_NODAL' | 'MODERATOR' | 'STATE_ADMIN';
 
@@ -31,6 +31,14 @@ export interface UserSession {
   detailsCompleted?: boolean;
 }
 
+const AUTH_SYNC_EVENT = 'apaar_auth_sync';
+
+function broadcastAuthUpdate(newUser: UserSession | null) {
+  try {
+    window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: newUser }));
+  } catch {}
+}
+
 export function useAuth() {
   const [user, setUser] = useState<UserSession | null>(() => {
     try {
@@ -40,6 +48,50 @@ export function useAuth() {
       return null;
     }
   });
+
+  // Listen to broadcast updates across components and tabs
+  useState(() => {
+    // Initial sync
+  });
+
+  // Sync state reactively across any mounted component
+  const syncCurrentUser = (newUser: UserSession | null) => {
+    setUser(newUser);
+  };
+
+  // Subscribe to auth events
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      if (e?.detail !== undefined) {
+        setUser(e.detail);
+      } else {
+        try {
+          const saved = localStorage.getItem('apaar_auth');
+          setUser(saved ? JSON.parse(saved) : null);
+        } catch {
+          setUser(null);
+        }
+      }
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'apaar_auth') {
+        try {
+          setUser(e.newValue ? JSON.parse(e.newValue) : null);
+        } catch {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener(AUTH_SYNC_EVENT, handleSync);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener(AUTH_SYNC_EVENT, handleSync);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   const login = async (
     emailOrId: string,
@@ -78,8 +130,8 @@ export function useAuth() {
         token: 'jwt_student_sih26263',
         apaarId: assignedApaar,
         rollNo: existingProfile?.rollNo || `2024CS${String(seed % 100).padStart(3, '0')}`,
-        institutionName: existingProfile?.institutionName || 'National Institute of Technology & Higher Education',
-        aisheCode: existingProfile?.aisheCode || 'C-16622',
+        institutionName: existingProfile?.institutionName || 'Easwari Engineering College',
+        aisheCode: existingProfile?.aisheCode || 'C-18491',
         department: existingProfile?.department || 'Computer Science and Engineering',
         degree: existingProfile?.degree || 'B.Tech - Computer Science',
         dob: derivedDob,
@@ -128,14 +180,25 @@ export function useAuth() {
 
     localStorage.setItem('apaar_auth', JSON.stringify(mockUser));
     setUser(mockUser);
+    broadcastAuthUpdate(mockUser);
     return mockUser;
   };
 
   const updateUserProfile = (updates: Partial<UserSession>) => {
-    if (!user) return;
-    const updated = { ...user, ...updates, detailsCompleted: true };
+    // Read fresh base user to avoid stale closures
+    let baseUser: UserSession | null = user;
+    try {
+      const saved = localStorage.getItem('apaar_auth');
+      if (saved) {
+        baseUser = JSON.parse(saved);
+      }
+    } catch {}
+
+    if (!baseUser) return;
+    const updated = { ...baseUser, ...updates, detailsCompleted: true };
     localStorage.setItem('apaar_auth', JSON.stringify(updated));
     setUser(updated);
+    broadcastAuthUpdate(updated);
 
     // Also persist into registered students
     try {
@@ -151,6 +214,7 @@ export function useAuth() {
   const logout = () => {
     localStorage.removeItem('apaar_auth');
     setUser(null);
+    broadcastAuthUpdate(null);
   };
 
   return { user, login, logout, updateUserProfile, isAuthenticated: !!user };
