@@ -31,12 +31,15 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
-  const studentName = user?.name || 'Rohan Sundaram';
-  const apaarId = user?.apaarId || '9842-1083-4912';
-  const rollNo = user?.rollNo || 'EEC2024CS042';
-  const collegeCode = user?.aisheCode || 'C-18491';
-  const institution = user?.institutionName || 'Easwari Engineering College';
-  const programme = user?.department || 'B.E. Computer Science and Engineering';
+  const hasCompletedDetails = !!user?.detailsCompleted;
+  const studentName = user?.name || (hasCompletedDetails ? 'Student' : 'New Student (Profile Pending)');
+  const apaarId = user?.apaarId || 'Pending Allocation';
+  const rollNo = user?.rollNo || (hasCompletedDetails ? 'Registered' : 'Pending Submission');
+  const collegeCode = user?.aisheCode || (hasCompletedDetails ? 'Accredited College' : 'Pending Selection');
+  const institution = user?.institutionName || (hasCompletedDetails ? 'Affiliated Higher Education Institution' : 'College Not Selected Yet');
+  const programme = user?.department 
+    ? `${user?.degree ? user.degree + ' • ' : ''}${user.department}`
+    : (hasCompletedDetails ? 'Academic Programme' : 'Degree / Branch Pending');
 
   // Cross-verification with College's uploaded bulk student records
   const { collegeDetails, crossVerify } = useCollegeData(collegeCode);
@@ -47,7 +50,7 @@ export default function StudentDashboard() {
   const studentQueries = queries.filter(
     (q) =>
       q.apaarId.replace(/[^0-9]/g, '') === cleanApaar ||
-      q.studentName.toLowerCase() === studentName.toLowerCase()
+      (studentName && q.studentName && q.studentName.toLowerCase() === studentName.toLowerCase())
   );
 
   // Read student's personalized uploaded credits from ABC registry
@@ -94,18 +97,18 @@ Issuing Authority:      AICTE & National Academic Depository (NAD)
 
 STUDENT BIOGRAPHICAL PARTICULARS:
 Full Legal Name:        ${studentName}
-Date of Birth:          ${user?.dob || '2004-05-14'}
-Gender:                 ${user?.gender || 'Male'}
-Blood Group:            ${user?.bloodGroup || 'O+'}
-Guardian Name:          ${user?.fatherName || 'Sundaram Krishnamurthy'}
+Date of Birth:          ${user?.dob || 'Not Filled'}
+Gender:                 ${user?.gender || 'Not Specified'}
+Blood Group:            ${user?.bloodGroup || 'Not Specified'}
+Guardian Name:          ${user?.fatherName || 'Not Filled'}
 
 ACADEMIC PARTICULARS:
 Accredited Institution: ${institution}
 AISHE Code:             ${collegeCode}
 Degree & Programme:     ${programme}
 Enrolment / Roll No:    ${rollNo}
-Academic Period:        2024 - 2028
-Academic Bank of Credits: ${user?.abcId || 'ABC-102-984-219'}
+Academic Period:        ${user?.admissionYear ? `${user.admissionYear} - ${Number(user.admissionYear) + 4}` : '2024 - 2028'}
+Academic Bank of Credits: ${user?.abcId || 'Pending'}
 
 This digital card is a permanent, non-transferable digital academic identity
 recognized across all universities, technical boards, and employers in India.
@@ -124,6 +127,28 @@ recognized across all universities, technical boards, and employers in India.
 
   return (
     <div className="space-y-6">
+      {/* If profile pending, show prompt */}
+      {!hasCompletedDetails && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div className="text-xs">
+              <span className="font-bold">Student Profile Details Incomplete:</span>
+              <span className="text-amber-800 ml-1">
+                Your personal details, contact address, and academic enrolment are pending completion.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/student/details')}
+            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs transition"
+          >
+            Fill Up Personal Details →
+          </button>
+        </div>
+      )}
+
       {/* Top Welcome Banner */}
       <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-900 via-slate-900 to-blue-950 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">

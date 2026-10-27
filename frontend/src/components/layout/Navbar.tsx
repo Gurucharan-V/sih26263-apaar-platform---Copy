@@ -92,9 +92,9 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
     ? 'Visitor'
     : user?.name || (
       activePortalType === 'STUDENT'
-        ? 'Rohan Sundaram'
+        ? (user?.apaarId ? `Student (${user.apaarId})` : 'Student')
         : activePortalType === 'COLLEGE_NODAL'
-        ? 'Dr. R. Rajesh'
+        ? 'College Nodal Officer'
         : 'Dr. V. K. Sharma'
     );
 

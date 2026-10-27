@@ -108,13 +108,22 @@ export function useAuth() {
       const cleanInputDigits = emailOrId.replace(/[^0-9]/g, '');
       const assignedApaar = cleanInputDigits.length === 12
         ? `${cleanInputDigits.slice(0, 4)}-${cleanInputDigits.slice(4, 8)}-${cleanInputDigits.slice(8, 12)}`
-        : (emailOrId.includes('-') && emailOrId.length >= 12 ? emailOrId : '9842-1083-4912');
+        : (cleanInputDigits.length >= 4 
+            ? `${cleanInputDigits.padEnd(12, '0').slice(0, 4)}-${cleanInputDigits.padEnd(12, '0').slice(4, 8)}-${cleanInputDigits.padEnd(12, '0').slice(8, 12)}`
+            : (emailOrId.includes('-') && emailOrId.length >= 10 ? emailOrId : '9842-1083-4912'));
 
-      // Check if student was previously saved or registered
+      const cleanKey = assignedApaar.replace(/[^0-9]/g, '');
+
+      // Check if student profile was previously saved specifically for THIS APAAR ID
       let existingProfile: any = null;
       try {
-        const savedStudents = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
-        existingProfile = savedStudents.find((s: any) => s.apaarId === assignedApaar || s.email === emailOrId);
+        const perStudentRaw = localStorage.getItem(`apaar_student_profile_${cleanKey}`);
+        if (perStudentRaw) {
+          existingProfile = JSON.parse(perStudentRaw);
+        } else {
+          const savedStudents = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
+          existingProfile = savedStudents.find((s: any) => s.apaarId === assignedApaar);
+        }
       } catch {}
 
       // Validate student credentials
@@ -124,41 +133,76 @@ export function useAuth() {
         throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: student@2024)');
       }
 
-      // Calculate distinct DOB based on digits if not from existing profile
-      const seed = parseInt(cleanInputDigits.slice(6, 10), 10) || 514;
-      const calcMonth = String((seed % 12) + 1).padStart(2, '0');
-      const calcDay = String((seed % 28) + 1).padStart(2, '0');
-      const calcYear = 2003 + (seed % 3);
-      const derivedDob = existingProfile?.dob || `${calcYear}-${calcMonth}-${calcDay}`;
-      const derivedName = existingProfile?.name || (emailOrId.includes('@') ? emailOrId.split('@')[0].replace(/[._]/g, ' ') : 'Rohan Sundaram');
+      // If demo student Rohan Sundaram (9842-1083-4912) and not customized yet:
+      const isDefaultDemoStudent = assignedApaar === '9842-1083-4912' && !existingProfile;
 
-      mockUser = {
-        email: existingProfile?.email || (emailOrId.includes('@') ? emailOrId : ''),
-        name: existingProfile?.name || '',
-        role: 'STUDENT',
-        token: 'jwt_student_sih26263',
-        apaarId: assignedApaar,
-        rollNo: existingProfile?.rollNo || '',
-        institutionName: existingProfile?.institutionName || '',
-        aisheCode: existingProfile?.aisheCode || '',
-        department: existingProfile?.department || '',
-        degree: existingProfile?.degree || '',
-        dob: existingProfile?.dob || '',
-        gender: existingProfile?.gender || '',
-        bloodGroup: existingProfile?.bloodGroup || '',
-        fatherName: existingProfile?.fatherName || '',
-        motherName: existingProfile?.motherName || '',
-        aadhaarMasked: existingProfile?.aadhaarMasked || '',
-        address: existingProfile?.address || '',
-        city: existingProfile?.city || '',
-        state: existingProfile?.state || '',
-        pincode: existingProfile?.pincode || '',
-        admissionYear: existingProfile?.admissionYear || '',
-        semester: existingProfile?.semester || '',
-        abcId: existingProfile?.abcId || '',
-        phone: existingProfile?.phone || '',
-        detailsCompleted: !!existingProfile?.detailsCompleted
-      };
+      if (isDefaultDemoStudent) {
+        mockUser = {
+          email: 'rohan.sundaram@easwari.ac.in',
+          name: 'Rohan Sundaram',
+          role: 'STUDENT',
+          token: 'jwt_student_sih26263',
+          apaarId: '9842-1083-4912',
+          rollNo: 'EEC2024CS042',
+          institutionName: 'Easwari Engineering College',
+          aisheCode: 'C-18491',
+          department: 'Computer Science and Engineering',
+          degree: 'Bachelor of Technology (B.Tech)',
+          dob: '2004-05-14',
+          gender: 'Male',
+          bloodGroup: 'O+',
+          fatherName: 'Sundaram Krishnamurthy',
+          motherName: 'Meenakshi Sundaram',
+          aadhaarMasked: 'XXXX-XXXX-4912',
+          address: '14, Bharathi Street, T. Nagar',
+          city: 'Chennai',
+          state: 'Tamil Nadu',
+          pincode: '600017',
+          admissionYear: '2024',
+          semester: 'Semester 1',
+          abcId: 'ABC-102-984-219',
+          phone: '+91 98765 43210',
+          detailsCompleted: true
+        };
+      } else if (existingProfile) {
+        // Load this specific student's own saved profile
+        mockUser = {
+          ...existingProfile,
+          role: 'STUDENT',
+          token: 'jwt_student_sih26263',
+          apaarId: assignedApaar,
+          detailsCompleted: !!existingProfile.detailsCompleted
+        };
+      } else {
+        // Different APAAR ID - completely new student session. NEVER leak another student's details!
+        mockUser = {
+          email: emailOrId.includes('@') ? emailOrId : '',
+          name: '',
+          role: 'STUDENT',
+          token: 'jwt_student_sih26263',
+          apaarId: assignedApaar,
+          rollNo: '',
+          institutionName: '',
+          aisheCode: '',
+          department: '',
+          degree: '',
+          dob: '',
+          gender: '',
+          bloodGroup: '',
+          fatherName: '',
+          motherName: '',
+          aadhaarMasked: '',
+          address: '',
+          city: '',
+          state: '',
+          pincode: '',
+          admissionYear: '',
+          semester: '',
+          abcId: '',
+          phone: '',
+          detailsCompleted: false
+        };
+      }
     } else if (portalRole === 'moderator' || emailOrId.includes('admin') || emailOrId.includes('moderator')) {
       const validModPasswords = ['admin@moe2024', 'moderator@2024'];
       if (!validModPasswords.includes(trimmedPass)) {
@@ -229,6 +273,14 @@ export function useAuth() {
     localStorage.setItem('apaar_auth', JSON.stringify(updated));
     setUser(updated);
     broadcastAuthUpdate(updated);
+
+    // Persist specifically under this student's APAAR ID key for absolute privacy and isolation
+    const studentCleanKey = String(updated.apaarId || '').replace(/[^0-9]/g, '');
+    if (studentCleanKey) {
+      try {
+        localStorage.setItem(`apaar_student_profile_${studentCleanKey}`, JSON.stringify(updated));
+      } catch {}
+    }
 
     // Also persist into registered students
     try {

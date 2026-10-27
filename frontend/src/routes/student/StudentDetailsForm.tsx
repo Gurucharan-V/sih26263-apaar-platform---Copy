@@ -69,7 +69,7 @@ export default function StudentDetailsForm() {
     consentDigiLocker: true
   });
 
-  // Re-sync only if user session has completed/saved details
+  // Re-sync only if user session has completed/saved details for this APAAR ID
   useEffect(() => {
     if (user && user.detailsCompleted) {
       setFormData((prev) => ({
@@ -96,8 +96,33 @@ export default function StudentDetailsForm() {
         abcId: user.abcId || '',
         aadhaarMasked: user.aadhaarMasked || '',
       }));
+    } else {
+      setFormData({
+        name: '',
+        dob: '',
+        gender: '',
+        bloodGroup: '',
+        fatherName: '',
+        motherName: '',
+        phone: '',
+        email: user?.email && !user.email.includes('rohan') ? user.email : '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        institutionName: '',
+        aisheCode: '',
+        degree: '',
+        department: '',
+        admissionYear: '',
+        semester: '',
+        rollNo: '',
+        abcId: '',
+        aadhaarMasked: '',
+        consentDigiLocker: true
+      });
     }
-  }, [user]);
+  }, [user?.apaarId, user?.detailsCompleted]);
 
   const [isSaving, setIsSaving] = useState(false);
 
