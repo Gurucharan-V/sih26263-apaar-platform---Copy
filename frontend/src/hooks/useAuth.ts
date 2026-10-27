@@ -43,8 +43,40 @@ function broadcastAuthUpdate(newUser: UserSession | null) {
 export function useAuth() {
   const [user, setUser] = useState<UserSession | null>(() => {
     try {
-      const saved = localStorage.getItem('apaar_auth');
-      return saved ? JSON.parse(saved) : null;
+      const savedRaw = localStorage.getItem('apaar_auth');
+      if (!savedRaw) return null;
+      const saved = JSON.parse(savedRaw);
+      // Cleanse legacy demo data so student form starts empty
+      if (saved && saved.role === 'STUDENT' && (saved.name === 'Rohan Sundaram' || saved.email?.includes('rohan'))) {
+        const cleansedStudent: UserSession = {
+          ...saved,
+          name: '',
+          dob: '',
+          gender: '',
+          bloodGroup: '',
+          fatherName: '',
+          motherName: '',
+          aadhaarMasked: '',
+          phone: '',
+          email: '',
+          address: '',
+          city: '',
+          state: '',
+          pincode: '',
+          institutionName: '',
+          aisheCode: '',
+          degree: '',
+          department: '',
+          admissionYear: '',
+          semester: '',
+          rollNo: '',
+          abcId: '',
+          detailsCompleted: false
+        };
+        localStorage.setItem('apaar_auth', JSON.stringify(cleansedStudent));
+        return cleansedStudent;
+      }
+      return saved;
     } catch {
       return null;
     }
@@ -133,50 +165,21 @@ export function useAuth() {
         throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: student@2024)');
       }
 
-      // If demo student Rohan Sundaram (9842-1083-4912) and not customized yet:
-      const isDefaultDemoStudent = assignedApaar === '9842-1083-4912' && !existingProfile;
+      // If student previously filled out their own details (and it's not the old legacy Rohan Sundaram demo data):
+      const hasRealSavedProfile = existingProfile && existingProfile.detailsCompleted && existingProfile.name !== 'Rohan Sundaram' && !existingProfile.email?.includes('rohan');
 
-      if (isDefaultDemoStudent) {
-        mockUser = {
-          email: 'rohan.sundaram@easwari.ac.in',
-          name: 'Rohan Sundaram',
-          role: 'STUDENT',
-          token: 'jwt_student_sih26263',
-          apaarId: '9842-1083-4912',
-          rollNo: 'EEC2024CS042',
-          institutionName: 'Easwari Engineering College',
-          aisheCode: 'C-18491',
-          department: 'Computer Science and Engineering',
-          degree: 'Bachelor of Technology (B.Tech)',
-          dob: '2004-05-14',
-          gender: 'Male',
-          bloodGroup: 'O+',
-          fatherName: 'Sundaram Krishnamurthy',
-          motherName: 'Meenakshi Sundaram',
-          aadhaarMasked: 'XXXX-XXXX-4912',
-          address: '14, Bharathi Street, T. Nagar',
-          city: 'Chennai',
-          state: 'Tamil Nadu',
-          pincode: '600017',
-          admissionYear: '2024',
-          semester: 'Semester 1',
-          abcId: 'ABC-102-984-219',
-          phone: '+91 98765 43210',
-          detailsCompleted: true
-        };
-      } else if (existingProfile) {
-        // Load this specific student's own saved profile
+      if (hasRealSavedProfile) {
         mockUser = {
           ...existingProfile,
           role: 'STUDENT',
           token: 'jwt_student_sih26263',
           apaarId: assignedApaar,
-          detailsCompleted: !!existingProfile.detailsCompleted
+          detailsCompleted: true
         };
       } else {
-        // Different APAAR ID - completely new student session. NEVER leak another student's details!
+        // Fresh student session. Personal Information, Contact & Address, and College & Academic Enrollment must be completely empty!
         mockUser = {
-          email: emailOrId.includes('@') ? emailOrId : '',
+          email: emailOrId.includes('@') && !emailOrId.includes('rohan') ? emailOrId : '',
           name: '',
           role: 'STUDENT',
           token: 'jwt_student_sih26263',

@@ -42,8 +42,9 @@ export default function StudentDetailsForm() {
   const navigate = useNavigate();
   const { user, updateUserProfile } = useAuth();
 
-  // Pre-fill from existing user session ONLY if user previously saved details
-  const isCompleted = !!user?.detailsCompleted;
+  // Pre-fill from existing user session ONLY if user previously filled in their own details
+  const isCompleted = !!user?.detailsCompleted && user?.name !== 'Rohan Sundaram' && !user?.email?.includes('rohan');
+  
   const [formData, setFormData] = useState({
     name: isCompleted ? (user?.name || '') : '',
     dob: isCompleted ? (user?.dob || '') : '',
@@ -52,7 +53,7 @@ export default function StudentDetailsForm() {
     fatherName: isCompleted ? (user?.fatherName || '') : '',
     motherName: isCompleted ? (user?.motherName || '') : '',
     phone: isCompleted ? (user?.phone || '') : '',
-    email: isCompleted ? (user?.email || '') : (user?.email && !user.email.includes('rohan') ? user.email : ''),
+    email: isCompleted ? (user?.email || '') : '',
     address: isCompleted ? (user?.address || '') : '',
     city: isCompleted ? (user?.city || '') : '',
     state: isCompleted ? (user?.state || '') : '',
@@ -69,11 +70,10 @@ export default function StudentDetailsForm() {
     consentDigiLocker: true
   });
 
-  // Re-sync only if user session has completed/saved details for this APAAR ID
+  // Re-sync only if user session has real completed details
   useEffect(() => {
-    if (user && user.detailsCompleted) {
-      setFormData((prev) => ({
-        ...prev,
+    if (user && user.detailsCompleted && user.name && user.name !== 'Rohan Sundaram' && !user.email?.includes('rohan')) {
+      setFormData({
         name: user.name || '',
         institutionName: user.institutionName || '',
         aisheCode: user.aisheCode || '',
@@ -95,7 +95,8 @@ export default function StudentDetailsForm() {
         rollNo: user.rollNo || '',
         abcId: user.abcId || '',
         aadhaarMasked: user.aadhaarMasked || '',
-      }));
+        consentDigiLocker: true
+      });
     } else {
       setFormData({
         name: '',
@@ -105,7 +106,7 @@ export default function StudentDetailsForm() {
         fatherName: '',
         motherName: '',
         phone: '',
-        email: user?.email && !user.email.includes('rohan') ? user.email : '',
+        email: '',
         address: '',
         city: '',
         state: '',
@@ -122,7 +123,35 @@ export default function StudentDetailsForm() {
         consentDigiLocker: true
       });
     }
-  }, [user?.apaarId, user?.detailsCompleted]);
+  }, [user?.apaarId, user?.detailsCompleted, user?.name]);
+
+  const handleClearForm = () => {
+    setFormData({
+      name: '',
+      dob: '',
+      gender: '',
+      bloodGroup: '',
+      fatherName: '',
+      motherName: '',
+      phone: '',
+      email: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      institutionName: '',
+      aisheCode: '',
+      degree: '',
+      department: '',
+      admissionYear: '',
+      semester: '',
+      rollNo: '',
+      abcId: '',
+      aadhaarMasked: '',
+      consentDigiLocker: true
+    });
+    toast.success('Form cleared. Please fill up your details.');
+  };
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -207,17 +236,27 @@ export default function StudentDetailsForm() {
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Header Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-blue-950 text-white p-6 sm:p-8 shadow-xl border border-emerald-900/40 relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-            <GraduationCap className="w-4 h-4" />
-            <span>Student Registry & APAAR ID Profile</span>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+              <GraduationCap className="w-4 h-4" />
+              <span>Student Registry & APAAR ID Profile</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Fill Up Your Student Details
+            </h1>
+            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Please enter your personal, academic, and institution details. Your information is securely bound to your APAAR ID and Academic Bank of Credits (ABC) repository.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Fill Up Your Student Details
-          </h1>
-          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Please enter your personal, academic, and institution details. Your information is securely bound to your APAAR ID and Academic Bank of Credits (ABC) repository.
-          </p>
+
+          <button
+            type="button"
+            onClick={handleClearForm}
+            className="self-start sm:self-center px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs transition cursor-pointer shrink-0"
+          >
+            Clear All Details
+          </button>
         </div>
 
         {/* Decorative Badge */}
