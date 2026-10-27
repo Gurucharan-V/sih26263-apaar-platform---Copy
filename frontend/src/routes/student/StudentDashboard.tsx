@@ -50,6 +50,21 @@ export default function StudentDashboard() {
       q.studentName.toLowerCase() === studentName.toLowerCase()
   );
 
+  // Read student's personalized uploaded credits from ABC registry
+  const userSemesters = (() => {
+    try {
+      const cleanApaar = (user?.apaarId || '').replace(/[^0-9]/g, '');
+      const saved = localStorage.getItem(`apaar_student_semesters_${cleanApaar || 'default'}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const earnedCredits = userSemesters
+    ? userSemesters.reduce((acc: number, s: any) => acc + (Number(s.creditsEarned) || 0), 0)
+    : 128;
+  const degreeCompletePercent = Math.min(100, Math.round((earnedCredits / 160) * 100));
+
   const handleCopyApaar = () => {
     navigator.clipboard.writeText(apaarId);
     setCopied(true);
@@ -360,17 +375,20 @@ recognized across all universities, technical boards, and employers in India.
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
             <div>
               <span className="text-xs text-slate-400 font-medium">Total Credits Earned</span>
-              <div className="text-3xl font-extrabold text-blue-900">128 / 160</div>
+              <div className="text-3xl font-extrabold text-blue-900">{earnedCredits} / 160</div>
             </div>
 
             {/* Progress Bar */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold text-slate-600">
                 <span>Degree Completion</span>
-                <span>80%</span>
+                <span>{degreeCompletePercent}%</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-emerald-500 h-full rounded-full w-4/5" />
+                <div
+                  className="bg-gradient-to-r from-blue-600 to-emerald-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${degreeCompletePercent}%` }}
+                />
               </div>
             </div>
 

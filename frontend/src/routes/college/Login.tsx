@@ -32,6 +32,7 @@ import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { Navbar } from '../../components/layout/Navbar';
+import { getCollegeNodalEmail } from '../../services/collegeStudentService';
 import toast from 'react-hot-toast';
 
 export type PortalType = 'student' | 'college' | 'moderator';
@@ -112,7 +113,9 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       setIdentifier('9842-1083-4912'); // Student APAAR ID
       setPassword('student@2024');
     } else if (portal === 'college') {
-      setIdentifier('nodal@college.ac.in'); // College Nodal Officer
+      const activeCode = (collegeInputCode || selectedCollegeCode || 'C-18491').trim().toUpperCase();
+      const specificEmail = getCollegeNodalEmail(activeCode);
+      setIdentifier(specificEmail); // Specific institutional email!
       setPassword('college@2024');
     } else {
       setIdentifier('moderator@education.gov.in'); // National Moderator
@@ -132,7 +135,9 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
     if (portal === 'student') {
       toast.success('Loaded Student credentials (Rohan Sundaram)');
     } else if (portal === 'college') {
-      toast.success(`Loaded College Nodal credentials for ${selectedCollegeCode}`);
+      const activeCode = (collegeInputCode || selectedCollegeCode || 'C-18491').trim().toUpperCase();
+      const specificEmail = getCollegeNodalEmail(activeCode);
+      toast.success(`Loaded Nodal credentials for ${activeCode} (${specificEmail})`);
     } else {
       toast.success('Loaded AICTE / MoE Moderator credentials (Dr. V. K. Sharma)');
     }
@@ -490,6 +495,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                             );
                             if (match) {
                               setSelectedCollegeCode(match.code);
+                              setIdentifier(getCollegeNodalEmail(match.code, match.name));
                             }
                           }}
                           onFocus={() => setIsDropdownOpen(true)}
@@ -540,9 +546,11 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setSelectedCollegeCode(collegeInputCode.trim().toUpperCase());
+                                  const customCode = collegeInputCode.trim().toUpperCase();
+                                  setSelectedCollegeCode(customCode);
+                                  setIdentifier(getCollegeNodalEmail(customCode));
                                   setIsDropdownOpen(false);
-                                  toast.success(`Selected custom code: ${collegeInputCode.trim().toUpperCase()}`);
+                                  toast.success(`Selected custom code: ${customCode}`);
                                 }}
                                 className="mt-1.5 text-blue-700 font-bold hover:underline block"
                               >
@@ -558,6 +566,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                                   onClick={() => {
                                     setSelectedCollegeCode(col.code);
                                     setCollegeInputCode(col.code);
+                                    setIdentifier(getCollegeNodalEmail(col.code, col.name));
                                     setIsDropdownOpen(false);
                                   }}
                                   className={`p-2.5 hover:bg-blue-50/80 transition flex items-center justify-between cursor-pointer text-xs ${

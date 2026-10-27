@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getCollegeDetails, getCollegeNodalEmail, getCollegeNodalName } from '../services/collegeStudentService';
 
 export type UserRole = 'STUDENT' | 'COLLEGE_NODAL' | 'MODERATOR' | 'STATE_ADMIN';
 
@@ -132,30 +133,30 @@ export function useAuth() {
       const derivedName = existingProfile?.name || (emailOrId.includes('@') ? emailOrId.split('@')[0].replace(/[._]/g, ' ') : 'Rohan Sundaram');
 
       mockUser = {
-        email: emailOrId.includes('@') ? emailOrId : (existingProfile?.email || 'rohan.sundaram@institute.ac.in'),
-        name: derivedName,
+        email: existingProfile?.email || (emailOrId.includes('@') ? emailOrId : ''),
+        name: existingProfile?.name || '',
         role: 'STUDENT',
         token: 'jwt_student_sih26263',
         apaarId: assignedApaar,
-        rollNo: existingProfile?.rollNo || `2024CS${String(seed % 100).padStart(3, '0')}`,
-        institutionName: existingProfile?.institutionName || 'Easwari Engineering College',
-        aisheCode: existingProfile?.aisheCode || 'C-18491',
-        department: existingProfile?.department || 'Computer Science and Engineering',
-        degree: existingProfile?.degree || 'B.Tech - Computer Science',
-        dob: derivedDob,
-        gender: existingProfile?.gender || 'Male',
-        bloodGroup: existingProfile?.bloodGroup || 'O+',
-        fatherName: existingProfile?.fatherName || 'Sundaram Krishnamurthy',
-        motherName: existingProfile?.motherName || 'Lakshmi Sundaram',
-        aadhaarMasked: existingProfile?.aadhaarMasked || `XXXX-XXXX-${assignedApaar.slice(-4)}`,
-        address: existingProfile?.address || 'No. 42, Anna Nagar West',
-        city: existingProfile?.city || 'Chennai',
-        state: existingProfile?.state || 'Tamil Nadu',
-        pincode: existingProfile?.pincode || '600040',
-        admissionYear: existingProfile?.admissionYear || '2024',
-        semester: existingProfile?.semester || 'Semester 4',
-        abcId: existingProfile?.abcId || `ABC-${assignedApaar.replace(/[^0-9]/g, '').slice(0, 9)}`,
-        phone: existingProfile?.phone || '+91 98765 43210',
+        rollNo: existingProfile?.rollNo || '',
+        institutionName: existingProfile?.institutionName || '',
+        aisheCode: existingProfile?.aisheCode || '',
+        department: existingProfile?.department || '',
+        degree: existingProfile?.degree || '',
+        dob: existingProfile?.dob || '',
+        gender: existingProfile?.gender || '',
+        bloodGroup: existingProfile?.bloodGroup || '',
+        fatherName: existingProfile?.fatherName || '',
+        motherName: existingProfile?.motherName || '',
+        aadhaarMasked: existingProfile?.aadhaarMasked || '',
+        address: existingProfile?.address || '',
+        city: existingProfile?.city || '',
+        state: existingProfile?.state || '',
+        pincode: existingProfile?.pincode || '',
+        admissionYear: existingProfile?.admissionYear || '',
+        semester: existingProfile?.semester || '',
+        abcId: existingProfile?.abcId || '',
+        phone: existingProfile?.phone || '',
         detailsCompleted: !!existingProfile?.detailsCompleted
       };
     } else if (portalRole === 'moderator' || emailOrId.includes('admin') || emailOrId.includes('moderator')) {
@@ -181,18 +182,21 @@ export function useAuth() {
         throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: college@2024)');
       }
 
-      const selectedAishe = collegeCustomCode || 'C-18491';
-      const selectedName = collegeCustomName || 'Easwari Engineering College';
+      const selectedAishe = (collegeCustomCode || 'C-18491').trim().toUpperCase();
+      const collegeInfo = getCollegeDetails(selectedAishe);
+      const selectedName = collegeCustomName || collegeInfo.name;
+      const nodalEmail = emailOrId.includes('@') ? emailOrId : getCollegeNodalEmail(selectedAishe, selectedName);
+      const nodalName = getCollegeNodalName(selectedAishe);
 
       mockUser = {
-        email: emailOrId.includes('@') ? emailOrId : 'nodal@college.ac.in',
-        name: 'Dr. R. Rajesh',
+        email: nodalEmail,
+        name: nodalName,
         role: 'COLLEGE_NODAL',
         token: 'jwt_college_sih26263',
         institutionName: selectedName,
         aisheCode: selectedAishe,
         department: 'Office of Academic Affairs & Admissions',
-        phone: '+91 44 2249 0853'
+        phone: collegeInfo.nodalOfficer?.phone || '+91 44 2249 0853'
       };
     }
 

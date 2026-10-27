@@ -37,58 +37,59 @@ export default function StudentDetailsForm() {
   const navigate = useNavigate();
   const { user, updateUserProfile } = useAuth();
 
-  // Pre-fill from existing user session
+  // Pre-fill from existing user session ONLY if user previously saved details
+  const isCompleted = !!user?.detailsCompleted;
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    dob: user?.dob || '',
-    gender: user?.gender || '',
-    bloodGroup: user?.bloodGroup || '',
-    fatherName: user?.fatherName || '',
-    motherName: user?.motherName || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-    address: user?.address || '',
-    city: user?.city || '',
-    state: user?.state || '',
-    pincode: user?.pincode || '',
-    institutionName: user?.institutionName || '',
-    aisheCode: user?.aisheCode || '',
-    degree: user?.degree || '',
-    department: user?.department || '',
-    admissionYear: user?.admissionYear || '',
-    semester: user?.semester || '',
-    rollNo: user?.rollNo || '',
-    abcId: user?.abcId || '',
-    aadhaarMasked: user?.aadhaarMasked || '',
+    name: isCompleted ? (user?.name || '') : '',
+    dob: isCompleted ? (user?.dob || '') : '',
+    gender: isCompleted ? (user?.gender || '') : '',
+    bloodGroup: isCompleted ? (user?.bloodGroup || '') : '',
+    fatherName: isCompleted ? (user?.fatherName || '') : '',
+    motherName: isCompleted ? (user?.motherName || '') : '',
+    phone: isCompleted ? (user?.phone || '') : '',
+    email: isCompleted ? (user?.email || '') : (user?.email && !user.email.includes('rohan') ? user.email : ''),
+    address: isCompleted ? (user?.address || '') : '',
+    city: isCompleted ? (user?.city || '') : '',
+    state: isCompleted ? (user?.state || '') : '',
+    pincode: isCompleted ? (user?.pincode || '') : '',
+    institutionName: isCompleted ? (user?.institutionName || '') : '',
+    aisheCode: isCompleted ? (user?.aisheCode || '') : '',
+    degree: isCompleted ? (user?.degree || '') : '',
+    department: isCompleted ? (user?.department || '') : '',
+    admissionYear: isCompleted ? (user?.admissionYear || '') : '',
+    semester: isCompleted ? (user?.semester || '') : '',
+    rollNo: isCompleted ? (user?.rollNo || '') : '',
+    abcId: isCompleted ? (user?.abcId || '') : '',
+    aadhaarMasked: isCompleted ? (user?.aadhaarMasked || '') : '',
     consentDigiLocker: true
   });
 
-  // Re-sync if user session updates
+  // Re-sync only if user session has completed/saved details
   useEffect(() => {
-    if (user) {
+    if (user && user.detailsCompleted) {
       setFormData((prev) => ({
         ...prev,
-        name: prev.name || user.name || '',
-        institutionName: prev.institutionName || user.institutionName || '',
-        aisheCode: prev.aisheCode || user.aisheCode || '',
-        dob: prev.dob || user.dob || '',
-        gender: prev.gender || user.gender || 'Male',
-        bloodGroup: prev.bloodGroup || user.bloodGroup || 'O+',
-        fatherName: prev.fatherName || user.fatherName || '',
-        motherName: prev.motherName || user.motherName || '',
-        phone: prev.phone || user.phone || '',
-        email: prev.email || user.email || '',
-        address: prev.address || user.address || '',
-        city: prev.city || user.city || '',
-        state: prev.state || user.state || '',
-        pincode: prev.pincode || user.pincode || '',
-        degree: prev.degree || user.degree || '',
-        department: prev.department || user.department || '',
-        admissionYear: prev.admissionYear || user.admissionYear || '',
-        semester: prev.semester || user.semester || '',
-        rollNo: prev.rollNo || user.rollNo || '',
-        abcId: prev.abcId || user.abcId || '',
-        aadhaarMasked: prev.aadhaarMasked || user.aadhaarMasked || '',
+        name: user.name || '',
+        institutionName: user.institutionName || '',
+        aisheCode: user.aisheCode || '',
+        dob: user.dob || '',
+        gender: user.gender || '',
+        bloodGroup: user.bloodGroup || '',
+        fatherName: user.fatherName || '',
+        motherName: user.motherName || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        address: user.address || '',
+        city: user.city || '',
+        state: user.state || '',
+        pincode: user.pincode || '',
+        degree: user.degree || '',
+        department: user.department || '',
+        admissionYear: user.admissionYear || '',
+        semester: user.semester || '',
+        rollNo: user.rollNo || '',
+        abcId: user.abcId || '',
+        aadhaarMasked: user.aadhaarMasked || '',
       }));
     }
   }, [user]);
@@ -247,6 +248,7 @@ export default function StudentDetailsForm() {
                 onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium bg-white"
               >
+                <option value="">-- Select Gender --</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Transgender">Transgender</option>
@@ -262,6 +264,7 @@ export default function StudentDetailsForm() {
                 onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium bg-white"
               >
+                <option value="">-- Select Blood Group --</option>
                 <option value="A+">A+</option>
                 <option value="A-">A-</option>
                 <option value="B+">B+</option>
@@ -622,6 +625,7 @@ export default function StudentDetailsForm() {
                 onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white"
               >
+                <option value="">-- Select Current Semester --</option>
                 <option value="Semester 1">Semester 1 (1st Year)</option>
                 <option value="Semester 2">Semester 2 (1st Year)</option>
                 <option value="Semester 3">Semester 3 (2nd Year)</option>

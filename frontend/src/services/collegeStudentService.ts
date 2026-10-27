@@ -450,13 +450,24 @@ const DEFAULT_COLLEGE_BATCHES: Record<string, UploadBatch[]> = {
 };
 
 /**
- * Get details of a specific college by code
+ * Get details of a specific college by code, with localStorage persistence for custom edits
  */
 export function getCollegeDetails(collegeCode: string): CollegeDetail {
   const norm = collegeCode.trim().toUpperCase();
+
+  // 1. Check custom saved profile in localStorage
+  try {
+    const custom = localStorage.getItem(`apaar_college_profile_${norm}`);
+    if (custom) {
+      return JSON.parse(custom);
+    }
+  } catch {}
+
+  // 2. Check predefined directory
   if (COLLEGE_DETAILS[norm]) {
     return COLLEGE_DETAILS[norm];
   }
+
   // Fallback for custom code
   return {
     code: norm,
@@ -470,12 +481,60 @@ export function getCollegeDetails(collegeCode: string): CollegeDetail {
     enrolledCount: 950,
     nodalOfficer: {
       name: 'Institution Nodal Officer',
-      email: `nodal@${norm.toLowerCase()}.edu.in`,
+      email: `nodal@${norm.toLowerCase().replace(/[^a-z0-9]/g, '') || 'college'}.edu.in`,
       phone: '+91 99999 88888',
       designation: 'Registrar & Nodal Coordinator'
     },
     programmes: ['BTECH-CSE', 'BTECH-IT', 'BTECH-ECE']
   };
+}
+
+/**
+ * Save custom edits to a college / institute name and institutional profile
+ */
+export function saveCollegeDetails(collegeCode: string, updates: Partial<CollegeDetail>): CollegeDetail {
+  const norm = collegeCode.trim().toUpperCase();
+  const current = getCollegeDetails(norm);
+  const updated: CollegeDetail = {
+    ...current,
+    ...updates,
+    code: norm,
+    nodalOfficer: {
+      ...current.nodalOfficer,
+      ...(updates.nodalOfficer || {})
+    }
+  };
+
+  try {
+    localStorage.setItem(`apaar_college_profile_${norm}`, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('apaar_college_students_updated', { detail: { collegeCode: norm, updatedProfile: updated } }));
+  } catch (e) {
+    console.error('Failed to save college details', e);
+  }
+
+  return updated;
+}
+
+/**
+ * Get distinct institutional nodal officer email specific to each college
+ */
+export function getCollegeNodalEmail(collegeCode: string, collegeName?: string): string {
+  const norm = collegeCode.trim().toUpperCase();
+  const details = getCollegeDetails(norm);
+  if (details.nodalOfficer?.email) {
+    return details.nodalOfficer.email;
+  }
+  const cleanName = (collegeName || details.name).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
+  return `nodal@${cleanName || norm.toLowerCase()}.ac.in`;
+}
+
+/**
+ * Get distinct institutional nodal officer name specific to each college
+ */
+export function getCollegeNodalName(collegeCode: string): string {
+  const norm = collegeCode.trim().toUpperCase();
+  const details = getCollegeDetails(norm);
+  return details.nodalOfficer?.name || 'Dr. College Nodal Officer';
 }
 
 /**
