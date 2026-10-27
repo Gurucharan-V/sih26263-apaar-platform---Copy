@@ -228,6 +228,96 @@ export const COLLEGE_DETAILS: Record<string, CollegeDetail> = {
       designation: 'Dean (Academic Affairs)'
     },
     programmes: ['BTECH-CSE', 'BTECH-IT', 'BTECH-ECE', 'BTECH-EE', 'BTECH-MECH']
+  },
+  'C-26120': {
+    code: 'C-26120',
+    name: 'Anna University (College of Engineering Guindy)',
+    shortName: 'AU-CEG',
+    state: 'Tamil Nadu',
+    city: 'Chennai',
+    affiliation: 'Anna University, Chennai',
+    type: 'State Technical University',
+    sanctionedIntake: 2800,
+    enrolledCount: 2750,
+    nodalOfficer: {
+      name: 'Prof. K. Sivakumar',
+      email: 'nodal.ceg@annauniv.edu',
+      phone: '+91 44 2235 7004',
+      designation: 'Dean of CEG & Nodal Coordinator'
+    },
+    programmes: ['BTECH-CSE', 'BTECH-IT', 'BTECH-ECE', 'BTECH-MECH', 'BTECH-CIVIL']
+  },
+  'C-59123': {
+    code: 'C-59123',
+    name: 'Indian Institute of Technology Madras (IITM)',
+    shortName: 'IITM',
+    state: 'Tamil Nadu',
+    city: 'Chennai',
+    affiliation: 'Council of Indian Institutes of Technology (INI)',
+    type: 'Institute of National Importance',
+    sanctionedIntake: 1400,
+    enrolledCount: 1385,
+    nodalOfficer: {
+      name: 'Prof. V. Kamakoti',
+      email: 'academic.nodal@iitm.ac.in',
+      phone: '+91 44 2257 8000',
+      designation: 'Dean (Academic Courses)'
+    },
+    programmes: ['BTECH-CSE', 'BTECH-EE', 'BTECH-ME', 'BTECH-DS', 'BTECH-AERO']
+  },
+  'C-31402': {
+    code: 'C-31402',
+    name: 'Indian Institute of Science (IISc Bangalore)',
+    shortName: 'IISc',
+    state: 'Karnataka',
+    city: 'Bengaluru',
+    affiliation: 'Autonomous Institute (Deemed University)',
+    type: 'Institute of National Importance',
+    sanctionedIntake: 600,
+    enrolledCount: 590,
+    nodalOfficer: {
+      name: 'Prof. G. Rangarajan',
+      email: 'nodal.officer@iisc.ac.in',
+      phone: '+91 80 2293 2004',
+      designation: 'Dean (Undergraduate Programme)'
+    },
+    programmes: ['BS-RESEARCH', 'BTECH-MTech-CSE', 'BS-PHYSICS', 'BS-MATHS']
+  },
+  'C-49381': {
+    code: 'C-49381',
+    name: 'Indian Institute of Technology Delhi (IITD)',
+    shortName: 'IITD',
+    state: 'Delhi',
+    city: 'New Delhi',
+    affiliation: 'Council of Indian Institutes of Technology (INI)',
+    type: 'Institute of National Importance',
+    sanctionedIntake: 1300,
+    enrolledCount: 1290,
+    nodalOfficer: {
+      name: 'Prof. Narayanan Kurur',
+      email: 'nodal.academic@iitd.ac.in',
+      phone: '+91 11 2659 1701',
+      designation: 'Dean (Academics)'
+    },
+    programmes: ['BTECH-CSE', 'BTECH-MATH', 'BTECH-EE', 'BTECH-MECH', 'BTECH-CHEM']
+  },
+  'C-11204': {
+    code: 'C-11204',
+    name: 'Indian Institute of Technology Bombay (IITB)',
+    shortName: 'IITB',
+    state: 'Maharashtra',
+    city: 'Mumbai',
+    affiliation: 'Council of Indian Institutes of Technology (INI)',
+    type: 'Institute of National Importance',
+    sanctionedIntake: 1350,
+    enrolledCount: 1340,
+    nodalOfficer: {
+      name: 'Prof. S. Sudarshan',
+      email: 'dean.nodal@iitb.ac.in',
+      phone: '+91 22 2576 7000',
+      designation: 'Dean (Academic Programmes)'
+    },
+    programmes: ['BTECH-CSE', 'BTECH-EE', 'BTECH-MECH', 'BTECH-AERO', 'BTECH-EP']
   }
 };
 

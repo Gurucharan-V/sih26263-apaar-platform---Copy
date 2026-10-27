@@ -185,11 +185,19 @@ export function useAuth() {
       const selectedAishe = (collegeCustomCode || 'C-18491').trim().toUpperCase();
       const collegeInfo = getCollegeDetails(selectedAishe);
       const selectedName = collegeCustomName || collegeInfo.name;
-      const nodalEmail = emailOrId.includes('@') ? emailOrId : getCollegeNodalEmail(selectedAishe, selectedName);
+      const expectedNodalEmail = getCollegeNodalEmail(selectedAishe, selectedName);
+
+      // Strict validation: Email must match the selected college's registered nodal officer email
+      if (emailOrId.trim().toLowerCase() !== expectedNodalEmail.trim().toLowerCase()) {
+        throw new Error(
+          `Institutional Email Mismatch: The entered email "${emailOrId}" does not match the registered Institutional Nodal Officer email for ${selectedName} (${expectedNodalEmail}). Please enter the official registered email.`
+        );
+      }
+
       const nodalName = getCollegeNodalName(selectedAishe);
 
       mockUser = {
-        email: nodalEmail,
+        email: expectedNodalEmail,
         name: nodalName,
         role: 'COLLEGE_NODAL',
         token: 'jwt_college_sih26263',

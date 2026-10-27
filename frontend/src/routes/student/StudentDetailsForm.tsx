@@ -31,6 +31,11 @@ export const COLLEGE_OPTIONS = [
   { name: 'Vellore Institute of Technology', code: 'C-36965', state: 'Tamil Nadu' },
   { name: 'Pune Institute of Computer Technology', code: 'C-09122', state: 'Maharashtra' },
   { name: 'Bengal College of Engineering', code: 'C-44109', state: 'West Bengal' },
+  { name: 'Anna University (College of Engineering Guindy)', code: 'C-26120', state: 'Tamil Nadu' },
+  { name: 'Indian Institute of Technology Madras (IITM)', code: 'C-59123', state: 'Tamil Nadu' },
+  { name: 'Indian Institute of Science (IISc Bangalore)', code: 'C-31402', state: 'Karnataka' },
+  { name: 'Indian Institute of Technology Delhi (IITD)', code: 'C-49381', state: 'Delhi' },
+  { name: 'Indian Institute of Technology Bombay (IITB)', code: 'C-11204', state: 'Maharashtra' },
 ];
 
 export default function StudentDetailsForm() {

@@ -25,7 +25,10 @@ import {
   Hash,
   School,
   Copy,
-  ChevronDown
+  ChevronDown,
+  AlertTriangle,
+  Search,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/ui/Button';
@@ -38,16 +41,30 @@ import toast from 'react-hot-toast';
 
 export type PortalType = 'student' | 'college' | 'moderator';
 
-export const ACCREDITED_COLLEGES = [
-  { code: 'C-18491', name: 'Easwari Engineering College' },
-  { code: 'C-16622', name: 'Chennai Institute of Technology & Engineering' },
-  { code: 'C-24891', name: 'National Institute of Technology (NIT Trichy)' },
-  { code: 'C-41209', name: 'Delhi Technological University' },
-  { code: 'C-53104', name: 'Bangalore Technological University' },
-  { code: 'C-62840', name: 'Apex Institute of Science & Technology' },
-  { code: 'C-36965', name: 'Vellore Institute of Technology' },
-  { code: 'C-09122', name: 'Pune Institute of Computer Technology' },
-  { code: 'C-44109', name: 'Bengal College of Engineering' }
+export interface AccreditedCollege {
+  code: string;
+  name: string;
+  shortName?: string;
+  state?: string;
+  city?: string;
+  email: string;
+}
+
+export const ACCREDITED_COLLEGES: AccreditedCollege[] = [
+  { code: 'C-18491', name: 'Easwari Engineering College', shortName: 'EEC', state: 'Tamil Nadu', city: 'Chennai', email: 'nodal.admissions@easwari.ac.in' },
+  { code: 'C-16622', name: 'Chennai Institute of Technology & Engineering', shortName: 'CIT', state: 'Tamil Nadu', city: 'Chennai', email: 'nodal.officer@citchennai.edu.in' },
+  { code: 'C-24891', name: 'National Institute of Technology (NIT Trichy)', shortName: 'NITT', state: 'Tamil Nadu', city: 'Tiruchirappalli', email: 'academic.nodal@nitt.edu' },
+  { code: 'C-41209', name: 'Delhi Technological University', shortName: 'DTU', state: 'Delhi', city: 'New Delhi', email: 'admissions.nodal@dtu.ac.in' },
+  { code: 'C-53104', name: 'Bangalore Technological University', shortName: 'BTU', state: 'Karnataka', city: 'Bengaluru', email: 'nodal.btu@vtu.ac.in' },
+  { code: 'C-62840', name: 'Apex Institute of Science & Technology', shortName: 'AIST', state: 'Maharashtra', city: 'Mumbai', email: 'nodal@apextech.edu.in' },
+  { code: 'C-36965', name: 'Vellore Institute of Technology', shortName: 'VIT', state: 'Tamil Nadu', city: 'Vellore', email: 'director.admissions@vit.ac.in' },
+  { code: 'C-09122', name: 'Pune Institute of Computer Technology', shortName: 'PICT', state: 'Maharashtra', city: 'Pune', email: 'nodal@pict.edu' },
+  { code: 'C-44109', name: 'Bengal College of Engineering', shortName: 'BCE', state: 'West Bengal', city: 'Durgapur', email: 'nodal@bengalcollege.ac.in' },
+  { code: 'C-26120', name: 'Anna University (College of Engineering Guindy)', shortName: 'AU-CEG', state: 'Tamil Nadu', city: 'Chennai', email: 'nodal.ceg@annauniv.edu' },
+  { code: 'C-59123', name: 'Indian Institute of Technology Madras (IITM)', shortName: 'IITM', state: 'Tamil Nadu', city: 'Chennai', email: 'academic.nodal@iitm.ac.in' },
+  { code: 'C-31402', name: 'Indian Institute of Science (IISc Bangalore)', shortName: 'IISc', state: 'Karnataka', city: 'Bengaluru', email: 'nodal.officer@iisc.ac.in' },
+  { code: 'C-49381', name: 'Indian Institute of Technology Delhi (IITD)', shortName: 'IITD', state: 'Delhi', city: 'New Delhi', email: 'nodal.academic@iitd.ac.in' },
+  { code: 'C-11204', name: 'Indian Institute of Technology Bombay (IITB)', shortName: 'IITB', state: 'Maharashtra', city: 'Mumbai', email: 'dean.nodal@iitb.ac.in' }
 ];
 
 export default function Login({ defaultPortal }: { defaultPortal?: PortalType }) {
@@ -73,11 +90,22 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({});
 
-  // College-specific state for unique code
+  // College-specific state for searchable institution and AISHE code
   const [selectedCollegeCode, setSelectedCollegeCode] = useState('C-18491');
+  const [selectedCollegeName, setSelectedCollegeName] = useState('Easwari Engineering College');
+  const [collegeSearchInput, setCollegeSearchInput] = useState('Easwari Engineering College');
   const [collegeInputCode, setCollegeInputCode] = useState('C-18491');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  // Email Mismatch Popup Modal state
+  const [emailMismatchModal, setEmailMismatchModal] = useState<{
+    isOpen: boolean;
+    enteredEmail: string;
+    expectedEmail: string;
+    collegeName: string;
+    collegeCode: string;
+  } | null>(null);
 
   const handleCopyCode = (code: string, e?: React.MouseEvent) => {
     if (e) {
@@ -90,15 +118,49 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
+  // Filter colleges based on letters typed in the searchable dropdown
   const filteredColleges = ACCREDITED_COLLEGES.filter((col) => {
-    const q = collegeInputCode.trim().toLowerCase();
+    const q = collegeSearchInput.trim().toLowerCase();
     if (!q) return true;
-    return col.code.toLowerCase().includes(q) || col.name.toLowerCase().includes(q);
+    return (
+      col.name.toLowerCase().includes(q) ||
+      col.code.toLowerCase().includes(q) ||
+      (col.shortName && col.shortName.toLowerCase().includes(q)) ||
+      (col.city && col.city.toLowerCase().includes(q)) ||
+      (col.state && col.state.toLowerCase().includes(q))
+    );
   });
 
   const activeCollege = ACCREDITED_COLLEGES.find(
-    (c) => c.code.toLowerCase() === (collegeInputCode || selectedCollegeCode).trim().toLowerCase()
+    (c) =>
+      c.code.toLowerCase() === (collegeInputCode || selectedCollegeCode).trim().toLowerCase() ||
+      c.name.toLowerCase() === (collegeSearchInput || selectedCollegeName).trim().toLowerCase()
   );
+
+  const handleSelectCollege = (col: AccreditedCollege) => {
+    setSelectedCollegeCode(col.code);
+    setSelectedCollegeName(col.name);
+    setCollegeSearchInput(col.name);
+    setCollegeInputCode(col.code);
+    setIsDropdownOpen(false);
+    setIdentifier(col.email);
+    setErrorMessage(null);
+    setFieldErrors({});
+    toast.success(`Selected ${col.name} (${col.code})`);
+  };
+
+  const handleCodeChange = (codeVal: string) => {
+    setCollegeInputCode(codeVal);
+    const upper = codeVal.trim().toUpperCase();
+    const match = ACCREDITED_COLLEGES.find((c) => c.code.toUpperCase() === upper);
+    if (match) {
+      setSelectedCollegeCode(match.code);
+      setSelectedCollegeName(match.name);
+      setCollegeSearchInput(match.name);
+      setIdentifier(match.email);
+      setErrorMessage(null);
+    }
+  };
 
   // Sync state if URL changes
   useEffect(() => {
@@ -115,7 +177,8 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       setPassword('student@2024');
     } else if (portal === 'college') {
       const activeCode = (collegeInputCode || selectedCollegeCode || 'C-18491').trim().toUpperCase();
-      const specificEmail = getCollegeNodalEmail(activeCode);
+      const match = ACCREDITED_COLLEGES.find((c) => c.code.toUpperCase() === activeCode);
+      const specificEmail = match?.email || getCollegeNodalEmail(activeCode);
       setIdentifier(specificEmail); // Specific institutional email!
       setPassword('college@2024');
     } else {
@@ -137,8 +200,10 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       toast.success('Loaded Student credentials (Rohan Sundaram)');
     } else if (portal === 'college') {
       const activeCode = (collegeInputCode || selectedCollegeCode || 'C-18491').trim().toUpperCase();
-      const specificEmail = getCollegeNodalEmail(activeCode);
-      toast.success(`Loaded Nodal credentials for ${activeCode} (${specificEmail})`);
+      const match = ACCREDITED_COLLEGES.find((c) => c.code.toUpperCase() === activeCode);
+      const specificEmail = match?.email || getCollegeNodalEmail(activeCode);
+      setIdentifier(specificEmail);
+      toast.success(`Loaded Nodal credentials for ${match ? match.name : activeCode} (${specificEmail})`);
     } else {
       toast.success('Loaded AICTE / MoE Moderator credentials (Dr. V. K. Sharma)');
     }
@@ -173,13 +238,38 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
       return;
     }
 
+    // Strict Institutional Email Verification for College Login
+    if (activePortal === 'college') {
+      const finalCollegeCode = (collegeInputCode || selectedCollegeCode).trim().toUpperCase();
+      const matchingCollege = ACCREDITED_COLLEGES.find((c) => c.code.toLowerCase() === finalCollegeCode.toLowerCase());
+      const finalCollegeName = matchingCollege ? matchingCollege.name : (selectedCollegeName || 'Affiliated Higher Education Institution');
+      const expectedEmail = matchingCollege?.email || getCollegeNodalEmail(finalCollegeCode, finalCollegeName);
+
+      // Check if email strictly matches
+      if (identifier.trim().toLowerCase() !== expectedEmail.trim().toLowerCase()) {
+        setEmailMismatchModal({
+          isOpen: true,
+          enteredEmail: identifier.trim(),
+          expectedEmail,
+          collegeName: finalCollegeName,
+          collegeCode: finalCollegeCode
+        });
+        const errorMsg = `Institutional Email Mismatch: The entered email "${identifier.trim()}" does not match the registered Nodal Officer email for ${finalCollegeName} (${expectedEmail}).`;
+        setErrorMessage(errorMsg);
+        toast.error('Email mismatch: Please enter the official registered email for this college.', {
+          id: 'email-mismatch'
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     setTimeout(async () => {
       try {
         const finalCollegeCode = (collegeInputCode || selectedCollegeCode).trim().toUpperCase();
         const matchingCollege = ACCREDITED_COLLEGES.find((c) => c.code.toLowerCase() === finalCollegeCode.toLowerCase());
-        const finalCollegeName = matchingCollege ? matchingCollege.name : 'Affiliated Higher Education Institution';
+        const finalCollegeName = matchingCollege ? matchingCollege.name : (selectedCollegeName || 'Affiliated Higher Education Institution');
 
         await login(identifier, password, activePortal, finalCollegeCode, finalCollegeName);
 
@@ -187,7 +277,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
           toast.success('Authenticated as Student! Please fill in your details.');
           navigate('/student/details'); // Direct to fill up all student details
         } else if (activePortal === 'college') {
-          toast.success(`Authenticated for College Code ${finalCollegeCode}! Opening College Portal...`);
+          toast.success(`Authenticated for ${finalCollegeName} (${finalCollegeCode})! Opening College Portal...`);
           navigate('/college');
         } else {
           toast.success('Authenticated as National Moderator! Opening Control Center...');
@@ -620,93 +710,101 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* For College Portal: Select or Enter Unique College Code with Dropdown & Copy */}
+                {/* For College Portal: Searchable Institution Name and Unique AISHE Code */}
                 {activePortal === 'college' && (
-                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2.5 relative">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-blue-950 uppercase tracking-wide">
-                        College Unique Code (AISHE Code) <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[11px] text-blue-700 font-medium">
-                        Type or pick code to copy
-                      </span>
-                    </div>
-
-                    {/* Interactive Code Input with Dropdown Button & Copy Button */}
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/90 space-y-3.5 relative">
+                    
+                    {/* Institution Name (College / University) Searchable Dropdown */}
                     <div className="relative">
-                      <div className="flex items-center">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-blue-950 uppercase tracking-wide">
+                          College / University Name <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[11px] text-blue-700 font-medium flex items-center gap-1">
+                          <Search className="w-3 h-3" />
+                          <span>Type first few letters</span>
+                        </span>
+                      </div>
+
+                      <div className="relative flex items-center">
+                        <div className="absolute left-3 text-slate-400 pointer-events-none">
+                          <Building2 className="w-4 h-4 text-blue-600" />
+                        </div>
                         <input
                           type="text"
-                          value={collegeInputCode}
+                          value={collegeSearchInput}
                           onChange={(e) => {
                             const val = e.target.value;
-                            setCollegeInputCode(val);
+                            setCollegeSearchInput(val);
                             setIsDropdownOpen(true);
-                            const match = ACCREDITED_COLLEGES.find(
-                              (c) => c.code.toLowerCase() === val.trim().toLowerCase()
+                            // Auto-match exact name
+                            const exact = ACCREDITED_COLLEGES.find(
+                              (c) => c.name.toLowerCase() === val.trim().toLowerCase()
                             );
-                            if (match) {
-                              setSelectedCollegeCode(match.code);
-                              setIdentifier(getCollegeNodalEmail(match.code, match.name));
+                            if (exact) {
+                              setSelectedCollegeCode(exact.code);
+                              setSelectedCollegeName(exact.name);
+                              setCollegeInputCode(exact.code);
+                              setIdentifier(exact.email);
+                              setErrorMessage(null);
                             }
                           }}
                           onFocus={() => setIsDropdownOpen(true)}
-                          placeholder="Type or select college code (e.g. C-18491)"
-                          className="w-full pl-3.5 pr-24 py-2.5 rounded-xl border border-blue-300 text-xs font-mono font-bold bg-white text-blue-900 focus:ring-2 focus:ring-blue-500/20 uppercase shadow-xs"
+                          placeholder="Type first few letters (e.g. Easwari, CIT, NIT, DTU...)"
+                          className="w-full pl-9 pr-20 py-2.5 rounded-xl border border-blue-300 text-xs font-semibold bg-white text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-xs"
                         />
 
-                        {/* Action buttons inside input */}
+                        {/* Right Buttons: Clear & Dropdown Chevron */}
                         <div className="absolute right-1.5 flex items-center gap-1">
-                          {/* Copy Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopyCode(collegeInputCode || selectedCollegeCode, e)}
-                            title="Copy active college code"
-                            className="px-2 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-100 transition flex items-center gap-1 text-[11px] font-bold cursor-pointer"
-                          >
-                            {copiedCode === (collegeInputCode || selectedCollegeCode) ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-emerald-700 text-[10px]">Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5 text-blue-600" />
-                                <span className="text-[10px] text-blue-800">Copy</span>
-                              </>
-                            )}
-                          </button>
-
-                          {/* Dropdown Toggle Button */}
+                          {collegeSearchInput && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCollegeSearchInput('');
+                                setIsDropdownOpen(true);
+                              }}
+                              title="Clear search"
+                              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            title="Toggle college code dropdown"
+                            title="Toggle college directory list"
                             className="p-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-100 transition cursor-pointer"
                           >
-                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-blue-700' : ''}`} />
+                            <ChevronDown
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                isDropdownOpen ? 'rotate-180 text-blue-700' : ''
+                              }`}
+                            />
                           </button>
                         </div>
                       </div>
 
-                      {/* Dropdown Menu showing matching colleges with Copy button */}
+                      {/* Dropdown Menu matching first few letters */}
                       {isDropdownOpen && (
-                        <div className="absolute z-30 left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white rounded-xl border border-blue-200 shadow-xl divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1">
+                        <div className="absolute z-40 left-0 right-0 mt-1.5 max-h-64 overflow-y-auto bg-white rounded-xl border border-blue-200 shadow-2xl divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1">
+                          <div className="px-3 py-1.5 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Accredited Institutions ({filteredColleges.length})</span>
+                            <span className="text-[10px] lowercase font-normal text-slate-400">click to select & autofill</span>
+                          </div>
+
                           {filteredColleges.length === 0 ? (
                             <div className="p-3 text-xs text-slate-500">
-                              <div>No accredited college matching "{collegeInputCode}".</div>
+                              <p>No accredited institution matching "{collegeSearchInput}".</p>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const customCode = collegeInputCode.trim().toUpperCase();
-                                  setSelectedCollegeCode(customCode);
-                                  setIdentifier(getCollegeNodalEmail(customCode));
+                                  setSelectedCollegeName(collegeSearchInput);
                                   setIsDropdownOpen(false);
-                                  toast.success(`Selected custom code: ${customCode}`);
+                                  toast.success(`Set custom college: ${collegeSearchInput}`);
                                 }}
                                 className="mt-1.5 text-blue-700 font-bold hover:underline block"
                               >
-                                Use "{collegeInputCode.trim().toUpperCase()}" as custom code
+                                Use "{collegeSearchInput}" as custom institution
                               </button>
                             </div>
                           ) : (
@@ -715,14 +813,9 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                               return (
                                 <div
                                   key={col.code}
-                                  onClick={() => {
-                                    setSelectedCollegeCode(col.code);
-                                    setCollegeInputCode(col.code);
-                                    setIdentifier(getCollegeNodalEmail(col.code, col.name));
-                                    setIsDropdownOpen(false);
-                                  }}
-                                  className={`p-2.5 hover:bg-blue-50/80 transition flex items-center justify-between cursor-pointer text-xs ${
-                                    isSelected ? 'bg-blue-50/70 font-semibold' : ''
+                                  onClick={() => handleSelectCollege(col)}
+                                  className={`p-2.5 hover:bg-blue-50/80 transition flex items-start justify-between cursor-pointer text-xs ${
+                                    isSelected ? 'bg-blue-50 font-semibold' : ''
                                   }`}
                                 >
                                   <div className="flex-1 pr-2 min-w-0">
@@ -730,17 +823,24 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                                       <span className="font-mono font-bold text-blue-800 bg-blue-100 px-1.5 py-0.5 rounded text-[11px] shrink-0">
                                         {col.code}
                                       </span>
-                                      <span className="font-semibold text-slate-800 text-xs truncate">
+                                      <span className="font-semibold text-slate-900 text-xs truncate">
                                         {col.name}
                                       </span>
                                     </div>
+                                    <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                                      {col.state && <span>{col.city ? `${col.city}, ` : ''}{col.state}</span>}
+                                      <span>•</span>
+                                      <span className="font-mono text-emerald-700 truncate">{col.email}</span>
+                                    </div>
                                   </div>
 
-                                  {/* Individual Copy Button in Dropdown */}
                                   <button
                                     type="button"
-                                    onClick={(e) => handleCopyCode(col.code, e)}
-                                    title={`Copy ${col.code}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyCode(col.code, e);
+                                    }}
+                                    title={`Copy code ${col.code}`}
                                     className="px-2 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded-md text-[10px] font-bold flex items-center gap-1 transition shrink-0"
                                   >
                                     {copiedCode === col.code ? (
@@ -763,29 +863,93 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                       )}
                     </div>
 
-                    {/* Matched College Badge Card */}
-                    {activeCollege && (
-                      <div className="p-2.5 bg-white rounded-lg border border-blue-200 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <div className="truncate">
-                            <span className="font-bold text-slate-900">{activeCollege.name}</span>
-                            <span className="text-slate-400 mx-1.5">•</span>
-                            <span className="font-mono text-blue-700 font-bold">{activeCollege.code}</span>
-                          </div>
-                        </div>
+                    {/* College Unique Code (AISHE Code) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-blue-950 uppercase tracking-wide">
+                          College Unique Code (AISHE Code) <span className="text-rose-500">*</span>
+                        </label>
                         <button
                           type="button"
-                          onClick={(e) => handleCopyCode(activeCollege.code, e)}
-                          className="text-[11px] font-bold text-blue-700 hover:underline shrink-0 ml-2 flex items-center gap-0.5"
+                          onClick={(e) => handleCopyCode(collegeInputCode || selectedCollegeCode, e)}
+                          className="text-[11px] text-blue-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          <Copy className="w-3 h-3" /> Copy
+                          <Copy className="w-3 h-3" />
+                          <span>Copy AISHE Code</span>
                         </button>
+                      </div>
+
+                      <div className="relative flex items-center">
+                        <div className="absolute left-3 text-slate-400 pointer-events-none">
+                          <Hash className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <input
+                          type="text"
+                          value={collegeInputCode}
+                          onChange={(e) => handleCodeChange(e.target.value)}
+                          placeholder="e.g. C-18491"
+                          className="w-full pl-9 pr-24 py-2.5 rounded-xl border border-blue-300 text-xs font-mono font-bold bg-white text-blue-950 focus:ring-2 focus:ring-blue-500/20 uppercase shadow-xs"
+                        />
+                        <div className="absolute right-2">
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-1 rounded-md">
+                            AISHE Code
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick College Switcher Chips */}
+                    <div className="pt-1">
+                      <span className="text-[11px] font-semibold text-blue-900 block mb-1.5">
+                        Quick Pick Accredited Institutions:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ACCREDITED_COLLEGES.slice(0, 6).map((col) => {
+                          const isCurrent = selectedCollegeCode === col.code;
+                          return (
+                            <button
+                              key={col.code}
+                              type="button"
+                              onClick={() => handleSelectCollege(col)}
+                              className={`text-[10px] px-2.5 py-1 rounded-lg border font-semibold transition cursor-pointer flex items-center gap-1 ${
+                                isCurrent
+                                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
+                              }`}
+                            >
+                              <span>{col.shortName || col.name.split(' ')[0]}</span>
+                              <span className="opacity-70 font-mono">({col.code})</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Active Selected College Summary Card */}
+                    {activeCollege && (
+                      <div className="p-3 bg-white rounded-xl border border-blue-200 shadow-xs space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span className="font-bold text-slate-900 truncate">
+                              {activeCollege.name}
+                            </span>
+                          </div>
+                          <span className="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded text-[11px] shrink-0">
+                            {activeCollege.code}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                          <span>{activeCollege.city ? `${activeCollege.city}, ` : ''}{activeCollege.state}</span>
+                          <span className="text-emerald-700 font-mono font-medium truncate ml-2">
+                            Official Nodal: {activeCollege.email}
+                          </span>
+                        </div>
                       </div>
                     )}
 
                     <p className="text-[10px] text-blue-800">
-                      Intake quotas and student records will be certified under this unique college code.
+                      Intake quotas and student records will be certified under this unique college code and registered nodal officer.
                     </p>
                   </div>
                 )}
@@ -917,6 +1081,81 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
             </div>
           </div>
         </div>
+
+        {/* Email Mismatch Alert Popup Modal */}
+        {emailMismatchModal?.isOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-rose-200 p-6 space-y-4 animate-in zoom-in-95">
+              <div className="flex items-start gap-3.5">
+                <div className="p-3 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-rose-600" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Institutional Email Mismatch
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Authentication rejected. The email entered does not match the registered nodal officer for this institution.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Target Institution</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="font-bold text-slate-900">{emailMismatchModal.collegeName}</span>
+                    <span className="font-mono text-blue-700 font-bold bg-blue-100 px-1.5 py-0.5 rounded text-[10px] shrink-0">
+                      {emailMismatchModal.collegeCode}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Entered Email:</span>
+                    <span className="font-mono text-xs text-rose-600 line-through font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                      {emailMismatchModal.enteredEmail || '(empty)'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Registered Nodal Email:</span>
+                    <span className="font-mono text-xs text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      {emailMismatchModal.expectedEmail}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                For institutional security and role isolation, each accredited college or university can only be accessed using its designated Institutional Nodal Officer email registered in the AISHE database.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentifier(emailMismatchModal.expectedEmail);
+                    setErrorMessage(null);
+                    setEmailMismatchModal(null);
+                    toast.success(`Populated registered email: ${emailMismatchModal.expectedEmail}`);
+                  }}
+                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Use Registered Email</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEmailMismatchModal(null)}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer"
+                >
+                  Edit Manually
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
