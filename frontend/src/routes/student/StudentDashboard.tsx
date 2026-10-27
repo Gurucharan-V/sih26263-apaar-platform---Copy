@@ -347,13 +347,15 @@ recognized across all universities, technical boards, and employers in India.
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
                       Date of Birth
                     </span>
-                    <span className="font-semibold text-slate-200 block">{user?.dob || '2004-05-14'}</span>
+                    <span className="font-semibold text-slate-200 block">{user?.dob || (hasCompletedDetails ? 'Recorded' : 'Pending')}</span>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
                       Academic Year
                     </span>
-                    <span className="font-semibold text-slate-200 block">2024 - 2028</span>
+                    <span className="font-semibold text-slate-200 block">
+                      {user?.admissionYear ? `${user.admissionYear} - ${Number(user.admissionYear) + 4}` : (hasCompletedDetails ? '2024 - 2028' : 'Pending')}
+                    </span>
                   </div>
                 </div>
 

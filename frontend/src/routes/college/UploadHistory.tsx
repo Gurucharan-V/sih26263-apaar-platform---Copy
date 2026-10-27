@@ -54,42 +54,44 @@ export default function UploadHistory() {
           </span>
         </div>
 
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-medium border-b">
-            <tr>
-              <th className="p-3">Batch ID</th>
-              <th className="p-3">File Name</th>
-              <th className="p-3">Uploaded At</th>
-              <th className="p-3">Total Rows</th>
-              <th className="p-3">Passed</th>
-              <th className="p-3">Failed</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {batches.map((h) => (
-              <tr key={h.id} className="hover:bg-slate-50">
-                <td className="p-3 font-mono text-xs font-bold text-blue-700">{h.id}</td>
-                <td className="p-3 font-medium text-slate-800">{h.filename}</td>
-                <td className="p-3 text-slate-500 text-xs">{h.uploadedAt}</td>
-                <td className="p-3 font-semibold text-slate-800">{h.total}</td>
-                <td className="p-3 text-emerald-600 font-medium">{h.passed}</td>
-                <td className="p-3 text-rose-600 font-medium">{h.failed}</td>
-                <td className="p-3">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                    {h.status}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <Link to={`/college/upload/errors/${h.id}`} className="text-xs text-blue-600 hover:underline font-bold">
-                    View Audit
-                  </Link>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-medium border-b">
+              <tr>
+                <th className="p-3">Batch ID</th>
+                <th className="p-3">File Name</th>
+                <th className="p-3">Uploaded At</th>
+                <th className="p-3">Total Rows</th>
+                <th className="p-3">Passed</th>
+                <th className="p-3">Failed</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {batches.map((h) => (
+                <tr key={h.id} className="hover:bg-slate-50">
+                  <td className="p-3 font-mono text-xs font-bold text-blue-700">{h.id}</td>
+                  <td className="p-3 font-medium text-slate-800">{h.filename}</td>
+                  <td className="p-3 text-slate-500 text-xs">{h.uploadedAt}</td>
+                  <td className="p-3 font-semibold text-slate-800">{h.total}</td>
+                  <td className="p-3 text-emerald-600 font-medium">{h.passed}</td>
+                  <td className="p-3 text-rose-600 font-medium">{h.failed}</td>
+                  <td className="p-3">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                      {h.status}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <Link to={`/college/upload/errors/${h.id}`} className="text-xs text-blue-600 hover:underline font-bold">
+                      View Audit
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

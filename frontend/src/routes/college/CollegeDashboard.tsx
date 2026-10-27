@@ -539,19 +539,27 @@ export default function CollegeDashboard() {
           </span>
         </div>
         <div className="grid md:grid-cols-3 gap-4 text-xs">
-          <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-100 space-y-1">
+          <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-100 space-y-1 overflow-hidden">
             <h3 className="font-bold text-blue-900">Dedicated College Student File Sets</h3>
             <p className="text-blue-700 leading-relaxed">
               Every college maintains its own distinct student roster. Bulk CSV ingestion saves directly to {collegeDetails.shortName}'s verified database.
             </p>
           </div>
-          <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-100 space-y-1">
-            <h3 className="font-bold text-emerald-900">Standard CSV Column Formatting</h3>
-            <p className="text-emerald-700 leading-relaxed">
-              Ensure CSV files include exact standard headers: <code>name,apaarId,dateOfBirth,gender,guardianName,email,contactPhone,programmeId,enrollmentYear,rollNo,aisheCode</code>.
+          <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-100 space-y-2 overflow-hidden flex flex-col justify-between">
+            <div className="space-y-1.5">
+              <h3 className="font-bold text-emerald-900">Standard CSV Column Formatting</h3>
+              <p className="text-emerald-800 leading-relaxed text-[11px]">
+                Ensure CSV files include exact standard headers:
+              </p>
+              <div className="p-2.5 bg-emerald-100/80 rounded-lg border border-emerald-200/80 font-mono text-[10.5px] text-emerald-950 font-semibold break-words whitespace-normal leading-relaxed tracking-tight select-all">
+                name, apaarId, dateOfBirth, gender, guardianName, email, contactPhone, programmeId, enrollmentYear, rollNo, aisheCode
+              </div>
+            </div>
+            <p className="text-[10px] text-emerald-700/80 font-medium">
+              Matches official MoE / AICTE standard template schema.
             </p>
           </div>
-          <div className="p-4 bg-purple-50/70 rounded-xl border border-purple-100 space-y-1">
+          <div className="p-4 bg-purple-50/70 rounded-xl border border-purple-100 space-y-1 overflow-hidden">
             <h3 className="font-bold text-purple-900">Real-Time Grievance Redressal</h3>
             <p className="text-purple-700 leading-relaxed">
               Student inquiries directed to {collegeCode} sync across tabs instantly. Resolving queries updates the student's status in real-time.
