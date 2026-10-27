@@ -358,15 +358,9 @@ recognized across all universities, technical boards, and employers in India.
           </h2>
 
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs text-slate-400 font-medium">Total Credits Earned</span>
-                <div className="text-3xl font-extrabold text-blue-900">128 / 160</div>
-              </div>
-              <div className="text-right">
-                <span className="text-xs text-slate-400 font-medium">Cumulative GPA</span>
-                <div className="text-3xl font-extrabold text-emerald-600">8.92</div>
-              </div>
+            <div>
+              <span className="text-xs text-slate-400 font-medium">Total Credits Earned</span>
+              <div className="text-3xl font-extrabold text-blue-900">128 / 160</div>
             </div>
 
             {/* Progress Bar */}

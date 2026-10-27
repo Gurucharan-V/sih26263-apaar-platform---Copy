@@ -187,8 +187,13 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
           toast.success('Authenticated as National Moderator! Opening Control Center...');
           navigate('/admin');
         }
-      } catch (err) {
-        setErrorMessage('Authentication gateway error. Please verify your connection.');
+      } catch (err: any) {
+        const errorMsg = err?.message || 'Invalid credentials: The password you entered is incorrect. Please check your credentials and try again.';
+        setErrorMessage(errorMsg);
+        toast.error(errorMsg, {
+          duration: 5000,
+          id: 'auth-invalid-credentials'
+        });
       } finally {
         setIsLoading(false);
       }
@@ -663,6 +668,11 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
+                    <p className="text-[11px] text-slate-500 font-medium mt-1">
+                      Demo password: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-800 font-mono font-bold">
+                        {activePortal === 'student' ? 'student@2024' : activePortal === 'college' ? 'college@2024' : 'admin@moe2024'}
+                      </code>
+                    </p>
                   </div>
                 </div>
 

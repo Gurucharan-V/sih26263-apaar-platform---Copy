@@ -93,8 +93,12 @@ export function useNotifications(currentRole?: 'STUDENT' | 'COLLEGE_NODAL' | 'MO
         return [newNotif, ...prev];
       });
 
-      // Show instant pop-up toast if current portal role is the recipient
-      if (!currentRole || newNotif.targetRole === 'ALL' || newNotif.targetRole === currentRole) {
+      // Show instant pop-up toast only if intended for this recipient
+      const isTargetRole = !currentRole || newNotif.targetRole === 'ALL' || newNotif.targetRole === currentRole;
+      const isTargetCollege = !newNotif.targetCollegeCode || !collegeCode || (newNotif.targetCollegeCode.toUpperCase() === collegeCode.toUpperCase());
+      const isTargetStudent = !newNotif.targetStudentId || !studentId || (newNotif.targetStudentId === studentId);
+
+      if (isTargetRole && isTargetCollege && isTargetStudent) {
         toast(`[${newNotif.sender}] ${newNotif.title}: ${newNotif.message}`, {
           duration: 6000,
           position: 'top-right',
@@ -120,7 +124,7 @@ export function useNotifications(currentRole?: 'STUDENT' | 'COLLEGE_NODAL' | 'MO
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('apaar_notification_dispatched' as any, handleCustomEvent as any);
     };
-  }, [currentRole]);
+  }, [currentRole, collegeCode, studentId]);
 
   // Filter notifications relevant to the active user role
   const userNotifications = allNotifications.filter((n) => {
@@ -130,7 +134,7 @@ export function useNotifications(currentRole?: 'STUDENT' | 'COLLEGE_NODAL' | 'MO
 
     // Filter by specific college code if college nodal
     if (currentRole === 'COLLEGE_NODAL' && n.targetCollegeCode && collegeCode) {
-      return n.targetCollegeCode === collegeCode;
+      return n.targetCollegeCode.toUpperCase() === collegeCode.toUpperCase();
     }
 
     // Filter by specific student id if student

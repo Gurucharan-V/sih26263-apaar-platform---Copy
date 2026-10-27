@@ -38,16 +38,11 @@ export default function StudentCredits() {
       </div>
 
       {/* Credit Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-xs text-slate-400 font-medium">Accumulated Credits</span>
           <div className="text-2xl font-black text-blue-900 mt-1">128 Credits</div>
           <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">80% Degree Complete</span>
-        </div>
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-400 font-medium">Cumulative CGPA</span>
-          <div className="text-2xl font-black text-emerald-600 mt-1">8.92 / 10</div>
-          <span className="text-[11px] text-slate-500 font-medium mt-1 block">First Class with Distinction</span>
         </div>
         <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-xs text-slate-400 font-medium">National ABC ID</span>

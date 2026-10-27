@@ -167,7 +167,7 @@ export default function StudentDetailsForm() {
 
     setTimeout(() => {
       setIsSaving(false);
-      toast.success('College name & student profile updated directly across all portals!');
+      toast.success('Student profile updated! Grievance pre-filled data, college roster, and academic records are now synchronized.');
       navigate('/student');
     }, 150);
   };

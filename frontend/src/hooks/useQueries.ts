@@ -6,6 +6,13 @@ export interface StudentQuery {
   apaarId: string;
   institution: string;
   aisheCode?: string;
+  studentEmail?: string;
+  studentPhone?: string;
+  rollNo?: string;
+  dob?: string;
+  gender?: string;
+  department?: string;
+  fatherName?: string;
   category: 'APAAR_MISMATCH' | 'INTAKE_DISCREPANCY' | 'CREDIT_TRANSFER' | 'NAME_CORRECTION' | 'DIGILOCKER_SYNC';
   subject: string;
   description: string;
@@ -24,6 +31,12 @@ const DEFAULT_QUERIES: StudentQuery[] = [
     apaarId: '9842-1083-4912',
     institution: 'Easwari Engineering College (EEC)',
     aisheCode: 'C-18491',
+    studentEmail: 'rohan.sundaram@institute.ac.in',
+    studentPhone: '+91 98765 43210',
+    rollNo: '2024CS014',
+    dob: '2003-10-06',
+    gender: 'Male',
+    department: 'Computer Science and Engineering',
     category: 'APAAR_MISMATCH',
     subject: 'Middle name initial missing in APAAR digital credential',
     description: 'My 10th marksheet has "Rohan S. Sundaram" but the APAAR card generated displays "Rohan Sundaram". Requesting correction to align with Digilocker.',
@@ -86,7 +99,7 @@ export function useQueries() {
       const saved = localStorage.getItem('apaar_queries');
       let parsed: StudentQuery[] = saved ? JSON.parse(saved) : DEFAULT_QUERIES;
 
-      // Sync active student's name if logged in
+      // Sync active student's full profile details if logged in
       try {
         const authData = localStorage.getItem('apaar_auth');
         if (authData) {
@@ -96,14 +109,29 @@ export function useQueries() {
             parsed = parsed.map((q: StudentQuery) => {
               const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
               if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
+                const prevName = q.studentName || 'Rohan Sundaram';
+                let updatedDesc = q.description;
+                if (authUser.name && prevName && prevName !== authUser.name) {
+                  updatedDesc = updatedDesc.split(prevName).join(authUser.name);
+                }
+                if (authUser.name && updatedDesc.includes('Rohan Sundaram')) {
+                  updatedDesc = updatedDesc.split('Rohan Sundaram').join(authUser.name);
+                }
                 return {
                   ...q,
-                  studentName: authUser.name,
+                  studentName: authUser.name || q.studentName,
                   institution: authUser.institutionName
-                    ? `${authUser.institutionName} (${authUser.aisheCode || 'C-18491'})`
+                    ? `${authUser.institutionName} (${authUser.aisheCode || q.aisheCode || 'C-18491'})`
                     : q.institution,
                   aisheCode: authUser.aisheCode || q.aisheCode,
-                  description: q.description.replace(/Rohan Sundaram/g, authUser.name)
+                  studentEmail: authUser.email || q.studentEmail,
+                  studentPhone: authUser.phone || q.studentPhone,
+                  rollNo: authUser.rollNo || q.rollNo,
+                  dob: authUser.dob || q.dob,
+                  gender: authUser.gender || q.gender,
+                  department: authUser.department || q.department,
+                  fatherName: authUser.fatherName || q.fatherName,
+                  description: updatedDesc
                 };
               }
               return q;

@@ -95,12 +95,13 @@ export function useAuth() {
 
   const login = async (
     emailOrId: string,
-    _pass: string,
+    pass: string,
     portalRole?: 'student' | 'college' | 'moderator',
     collegeCustomCode?: string,
     collegeCustomName?: string
   ) => {
     let mockUser: UserSession;
+    const trimmedPass = (pass || '').trim();
 
     if (portalRole === 'student' || emailOrId.includes('student') || /^\d{4}/.test(emailOrId)) {
       const cleanInputDigits = emailOrId.replace(/[^0-9]/g, '');
@@ -114,6 +115,13 @@ export function useAuth() {
         const savedStudents = JSON.parse(localStorage.getItem('apaar_registered_students') || '[]');
         existingProfile = savedStudents.find((s: any) => s.apaarId === assignedApaar || s.email === emailOrId);
       } catch {}
+
+      // Validate student credentials
+      const validStudentPasswords = ['student@2024'];
+      const profilePass = existingProfile?.password;
+      if (!validStudentPasswords.includes(trimmedPass) && (!profilePass || trimmedPass !== profilePass)) {
+        throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: student@2024)');
+      }
 
       // Calculate distinct DOB based on digits if not from existing profile
       const seed = parseInt(cleanInputDigits.slice(6, 10), 10) || 514;
@@ -151,6 +159,11 @@ export function useAuth() {
         detailsCompleted: !!existingProfile?.detailsCompleted
       };
     } else if (portalRole === 'moderator' || emailOrId.includes('admin') || emailOrId.includes('moderator')) {
+      const validModPasswords = ['admin@moe2024', 'moderator@2024'];
+      if (!validModPasswords.includes(trimmedPass)) {
+        throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: admin@moe2024)');
+      }
+
       mockUser = {
         email: emailOrId.includes('@') ? emailOrId : 'moderator@education.gov.in',
         name: 'Dr. V. K. Sharma',
@@ -163,6 +176,11 @@ export function useAuth() {
       };
     } else {
       // College login with unique college code
+      const validCollegePasswords = ['college@2024', 'nodal@2024'];
+      if (!validCollegePasswords.includes(trimmedPass)) {
+        throw new Error('Invalid credentials: The password you entered is incorrect. (Default demo password: college@2024)');
+      }
+
       const selectedAishe = collegeCustomCode || 'C-18491';
       const selectedName = collegeCustomName || 'Easwari Engineering College';
 
@@ -208,32 +226,45 @@ export function useAuth() {
       localStorage.setItem('apaar_registered_students', JSON.stringify(filtered));
     } catch {}
 
-    // Synchronize username and college in student queries
-    if (updates.name || updates.institutionName) {
-      try {
-        const savedQueries = JSON.parse(localStorage.getItem('apaar_queries') || '[]');
-        let queriesChanged = false;
-        const updatedQueries = savedQueries.map((q: any) => {
-          const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
-          const cleanUserApaar = String(updated.apaarId || '').replace(/[^0-9]/g, '');
-          if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
-            queriesChanged = true;
-            return {
-              ...q,
-              studentName: updated.name,
-              institution: updated.institutionName ? `${updated.institutionName} (${updated.aisheCode || ''})` : q.institution,
-              aisheCode: updated.aisheCode || q.aisheCode,
-              description: updates.name ? q.description.replace(/Rohan Sundaram/g, updates.name) : q.description
-            };
+    // Synchronize ANY student profile updates in student queries
+    try {
+      const savedQueries = JSON.parse(localStorage.getItem('apaar_queries') || '[]');
+      let queriesChanged = false;
+      const cleanUserApaar = String(updated.apaarId || '').replace(/[^0-9]/g, '');
+      const updatedQueries = savedQueries.map((q: any) => {
+        const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
+        if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
+          queriesChanged = true;
+          const oldName = q.studentName || 'Rohan Sundaram';
+          let newDesc = q.description || '';
+          if (updated.name && oldName && oldName !== updated.name) {
+            newDesc = newDesc.split(oldName).join(updated.name);
           }
-          return q;
-        });
-        if (queriesChanged) {
-          localStorage.setItem('apaar_queries', JSON.stringify(updatedQueries));
-          window.dispatchEvent(new CustomEvent('apaar_queries_updated'));
+          if (updated.name && newDesc.includes('Rohan Sundaram')) {
+            newDesc = newDesc.split('Rohan Sundaram').join(updated.name);
+          }
+          return {
+            ...q,
+            studentName: updated.name || q.studentName,
+            institution: updated.institutionName ? `${updated.institutionName} (${updated.aisheCode || ''})` : q.institution,
+            aisheCode: updated.aisheCode || q.aisheCode,
+            studentEmail: updated.email || q.studentEmail,
+            studentPhone: updated.phone || q.studentPhone,
+            rollNo: updated.rollNo || q.rollNo,
+            dob: updated.dob || q.dob,
+            gender: updated.gender || q.gender,
+            department: updated.department || q.department,
+            fatherName: updated.fatherName || q.fatherName,
+            description: newDesc
+          };
         }
-      } catch {}
-    }
+        return q;
+      });
+      if (queriesChanged) {
+        localStorage.setItem('apaar_queries', JSON.stringify(updatedQueries));
+        window.dispatchEvent(new CustomEvent('apaar_queries_updated'));
+      }
+    } catch {}
 
     return updated;
   };

@@ -38,7 +38,6 @@ export default function CollegeQueries() {
   const [activeTab, setActiveTab] = useState<'student_queries' | 'submit_grievance' | 'moderator_notices'>('student_queries');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING_REVIEW' | 'IN_PROGRESS' | 'RESOLVED'>('ALL');
-  const [queryScope, setQueryScope] = useState<'COLLEGE_ONLY' | 'ALL'>('COLLEGE_ONLY');
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Response modal
@@ -64,29 +63,30 @@ export default function CollegeQueries() {
     }, 400);
   };
 
-  // Filter queries relevant to this college
+  // Filter queries strictly relevant to this college
   const relevantQueries = queries.filter((q) => {
     const qCleanApaar = q.apaarId.replace(/[^0-9]/g, '');
     
     // Check if student belongs to this college's uploaded bulk student roster
     const studentInCollegeBulkList = collegeStudents.some(
-      (s) => s.apaarId.replace(/[^0-9]/g, '') === qCleanApaar ||
-             s.name.toLowerCase() === q.studentName.toLowerCase()
+      (s) => s.apaarId.replace(/[^0-9]/g, '') === qCleanApaar
     );
 
-    const isThisCollege =
-      (q.aisheCode && q.aisheCode.toUpperCase() === collegeCode.toUpperCase()) ||
-      q.institution.toLowerCase().includes(collegeName.toLowerCase()) ||
-      collegeName.toLowerCase().includes(q.institution.toLowerCase()) ||
-      q.institution.includes(collegeCode) ||
-      studentInCollegeBulkList ||
-      (collegeCode === 'C-18491' && q.institution.toLowerCase().includes('easwari')) ||
-      (collegeCode === 'C-16622' && q.institution.toLowerCase().includes('chennai'));
-
-    // Include general queries if searching specifically or scope set to ALL
-    const matchesScope = queryScope === 'ALL' || isThisCollege;
+    // Strict institutional isolation:
+    // If the query has an aisheCode, it MUST match this college's aisheCode
+    let isThisCollege = false;
+    if (q.aisheCode) {
+      isThisCollege = q.aisheCode.trim().toUpperCase() === collegeCode.trim().toUpperCase();
+    } else {
+      isThisCollege =
+        q.institution.toLowerCase().includes(collegeName.toLowerCase()) ||
+        collegeName.toLowerCase().includes(q.institution.toLowerCase()) ||
+        q.institution.includes(collegeCode) ||
+        studentInCollegeBulkList;
+    }
 
     const matchesSearch =
+      !searchQuery.trim() ||
       q.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.apaarId.includes(searchQuery) ||
       q.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +94,8 @@ export default function CollegeQueries() {
 
     const matchesStatus = statusFilter === 'ALL' || q.status === statusFilter;
 
-    return (matchesScope || searchQuery.length > 2) && matchesSearch && matchesStatus;
+    // Queries from other colleges MUST NEVER reflect in this college portal
+    return isThisCollege && matchesSearch && matchesStatus;
   });
 
   // Notices sent to this college from Moderator
@@ -292,27 +293,9 @@ export default function CollegeQueries() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-                <button
-                  onClick={() => setQueryScope('COLLEGE_ONLY')}
-                  className={`px-3 py-1 rounded-lg transition ${
-                    queryScope === 'COLLEGE_ONLY'
-                      ? 'bg-white text-blue-700 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  This College ({collegeCode})
-                </button>
-                <button
-                  onClick={() => setQueryScope('ALL')}
-                  className={`px-3 py-1 rounded-lg transition ${
-                    queryScope === 'ALL'
-                      ? 'bg-white text-blue-700 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  All Inquiries ({queries.length})
-                </button>
+              <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-900">
+                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Institutional Scope: {collegeCode} ({relevantQueries.length} {relevantQueries.length === 1 ? 'Query' : 'Queries'})</span>
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -411,7 +394,7 @@ export default function CollegeQueries() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-                      <div className="flex items-center gap-3 text-slate-500">
+                      <div className="flex flex-wrap items-center gap-3 text-slate-500">
                         <span className="flex items-center gap-1 font-semibold text-slate-700">
                           <User className="w-3.5 h-3.5 text-blue-600" />
                           {q.studentName}
@@ -419,6 +402,21 @@ export default function CollegeQueries() {
                         <span className="font-mono text-slate-600">
                           APAAR: {q.apaarId}
                         </span>
+                        {q.rollNo && (
+                          <span className="font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded text-[11px]">
+                            Roll: {q.rollNo}
+                          </span>
+                        )}
+                        {q.dob && (
+                          <span className="text-slate-500 text-[11px]">
+                            DOB: {q.dob}
+                          </span>
+                        )}
+                        {q.studentEmail && (
+                          <span className="text-slate-500 text-[11px]">
+                            {q.studentEmail}
+                          </span>
+                        )}
                         <span className="text-slate-400">
                           {q.institution}
                         </span>
