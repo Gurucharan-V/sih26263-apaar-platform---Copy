@@ -122,6 +122,14 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
     collegeCode: string;
   } | null>(null);
 
+  // APAAR Length Validation Popup Modal state for Student Portal
+  const [apaarLengthModal, setApaarLengthModal] = useState<{
+    isOpen: boolean;
+    enteredValue: string;
+    digitCount: number;
+    reason: 'LESS_THAN_12' | 'MORE_THAN_12';
+  } | null>(null);
+
   const handleCopyCode = (code: string, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -251,6 +259,31 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
 
     if (!validate()) {
       return;
+    }
+
+    // Strict 12-Digit APAAR Number Verification for Student Portal Login
+    if (activePortal === 'student') {
+      const cleanDigits = identifier.replace(/[^0-9]/g, '');
+      const isEmail = identifier.includes('@');
+
+      // If user inputs an APAAR number or student identifier (not a pure email without digits)
+      if (!isEmail || cleanDigits.length > 0) {
+        if (cleanDigits.length < 12 || cleanDigits.length > 12) {
+          setApaarLengthModal({
+            isOpen: true,
+            enteredValue: identifier.trim(),
+            digitCount: cleanDigits.length,
+            reason: cleanDigits.length < 12 ? 'LESS_THAN_12' : 'MORE_THAN_12'
+          });
+          const errorMsg = `Invalid APAAR Number: The entered APAAR number has ${cleanDigits.length} digits. A valid APAAR number must be exactly 12 digits (e.g. 9842-1083-4912). Login is not allowed.`;
+          setErrorMessage(errorMsg);
+          toast.error(errorMsg, {
+            id: 'apaar-invalid-length',
+            duration: 5000
+          });
+          return; // Strictly not allowed to proceed
+        }
+      }
     }
 
     // Strict Institutional Email Verification for College Login
@@ -774,19 +807,33 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   </div>
                 )}
 
-                <Input
-                  label={config.inputLabel}
-                  placeholder={config.inputPlaceholder}
-                  value={identifier}
-                  onChange={(e) => {
-                    setIdentifier(e.target.value);
-                    if (fieldErrors.identifier) {
-                      setFieldErrors((prev) => ({ ...prev, identifier: undefined }));
-                    }
-                  }}
-                  error={fieldErrors.identifier}
-                  leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
-                />
+                <div className="space-y-1">
+                  <Input
+                    label={config.inputLabel}
+                    placeholder={config.inputPlaceholder}
+                    value={identifier}
+                    onChange={(e) => {
+                      setIdentifier(e.target.value);
+                      if (fieldErrors.identifier) {
+                        setFieldErrors((prev) => ({ ...prev, identifier: undefined }));
+                      }
+                    }}
+                    error={fieldErrors.identifier}
+                    leftIcon={<Mail className="w-4 h-4 text-slate-400" />}
+                  />
+                  {activePortal === 'student' && !identifier.includes('@') && identifier.trim().length > 0 && (
+                    <div className="flex items-center justify-between text-[11px] px-1 pt-0.5">
+                      <span className="text-slate-500">APAAR Digit Count:</span>
+                      <span className={`font-mono font-bold ${
+                        identifier.replace(/[^0-9]/g, '').length === 12 
+                          ? 'text-emerald-600' 
+                          : 'text-rose-600'
+                      }`}>
+                        {identifier.replace(/[^0-9]/g, '').length} / 12 digits {identifier.replace(/[^0-9]/g, '').length === 12 ? '✓ (Valid 12-Digit APAAR)' : '(Must be exactly 12 digits)'}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-1">
                   <div className="relative">
@@ -1109,6 +1156,83 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer"
                 >
                   Edit Manually
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* APAAR 12-Digit Length Validation Alert Popup Modal */}
+        {apaarLengthModal?.isOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border-2 border-rose-300 p-6 space-y-4 animate-in zoom-in-95">
+              <div className="flex items-start gap-3.5">
+                <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+                  <AlertTriangle className="w-7 h-7 text-rose-600" />
+                </div>
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase tracking-wide">
+                    Action Not Allowed
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Invalid APAAR Number Length
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    An APAAR ID must consist of <strong>exactly 12 numeric digits</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">Entered APAAR:</span>
+                  <span className="font-mono text-xs font-bold text-rose-700 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                    {apaarLengthModal.enteredValue || '(empty)'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">Detected Numeric Digits:</span>
+                  <span className="font-mono text-xs font-extrabold text-rose-800 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                    {apaarLengthModal.digitCount} / 12 digits
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-rose-200/80 flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">Validation Status:</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-200 text-rose-900">
+                    {apaarLengthModal.reason === 'LESS_THAN_12'
+                      ? `Too Short (${12 - apaarLengthModal.digitCount} digits missing)`
+                      : `Too Long (${apaarLengthModal.digitCount - 12} digits excess)`}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Under Ministry of Education and National Academic Depository regulations, every student’s <strong>Automated Permanent Academic Account Registry (APAAR)</strong> number is strictly standardized to a 12-digit format (e.g. <code>9842-1083-4912</code>). 
+                Login cannot proceed with a number of {apaarLengthModal.digitCount} digits.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentifier('9842-1083-4912');
+                    setErrorMessage(null);
+                    setApaarLengthModal(null);
+                    toast.success('Populated standard 12-digit demo APAAR ID: 9842-1083-4912');
+                  }}
+                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Use 12-Digit Demo ID</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApaarLengthModal(null)}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer"
+                >
+                  Correct My Number
                 </button>
               </div>
             </div>

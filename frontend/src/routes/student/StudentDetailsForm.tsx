@@ -15,7 +15,10 @@ import {
   ArrowRight,
   BookOpen,
   Sparkles,
-  Info
+  Info,
+  AlertTriangle,
+  X,
+  Hash
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { syncStudentToCollegeRoster } from '../../services/collegeStudentService';
@@ -46,6 +49,7 @@ export default function StudentDetailsForm() {
   const isCompleted = !!user?.detailsCompleted && user?.name !== 'Rohan Sundaram' && !user?.email?.includes('rohan');
   
   const [formData, setFormData] = useState({
+    apaarId: user?.apaarId || '9842-1083-4912',
     name: isCompleted ? (user?.name || '') : '',
     dob: isCompleted ? (user?.dob || '') : '',
     gender: isCompleted ? (user?.gender || '') : '',
@@ -70,10 +74,19 @@ export default function StudentDetailsForm() {
     consentDigiLocker: true
   });
 
+  // Modal alert when APAAR number length is less or more than 12 digits
+  const [apaarInvalidModal, setApaarInvalidModal] = useState<{
+    isOpen: boolean;
+    enteredValue: string;
+    digitCount: number;
+    reason: 'LESS_THAN_12' | 'MORE_THAN_12';
+  } | null>(null);
+
   // Re-sync only if user session has real completed details
   useEffect(() => {
     if (user && user.detailsCompleted && user.name && user.name !== 'Rohan Sundaram' && !user.email?.includes('rohan')) {
       setFormData({
+        apaarId: user.apaarId || '9842-1083-4912',
         name: user.name || '',
         institutionName: user.institutionName || '',
         aisheCode: user.aisheCode || '',
@@ -99,6 +112,7 @@ export default function StudentDetailsForm() {
       });
     } else {
       setFormData({
+        apaarId: user?.apaarId || '9842-1083-4912',
         name: '',
         dob: '',
         gender: '',
@@ -127,6 +141,7 @@ export default function StudentDetailsForm() {
 
   const handleClearForm = () => {
     setFormData({
+      apaarId: user?.apaarId || '9842-1083-4912',
       name: '',
       dob: '',
       gender: '',
@@ -168,6 +183,22 @@ export default function StudentDetailsForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Strict 12-Digit APAAR Number Validation
+    const cleanApaar = (formData.apaarId || '').replace(/[^0-9]/g, '');
+    if (cleanApaar.length < 12 || cleanApaar.length > 12) {
+      setApaarInvalidModal({
+        isOpen: true,
+        enteredValue: formData.apaarId || '',
+        digitCount: cleanApaar.length,
+        reason: cleanApaar.length < 12 ? 'LESS_THAN_12' : 'MORE_THAN_12'
+      });
+      toast.error(`Invalid APAAR Number: Must contain exactly 12 numeric digits (found ${cleanApaar.length}). Submission rejected.`, {
+        id: 'apaar-invalid-form-length',
+        duration: 5000
+      });
+      return; // Not allowed to proceed
+    }
+
     if (!formData.name.trim()) {
       toast.error('Please enter your full legal name');
       return;
@@ -183,7 +214,10 @@ export default function StudentDetailsForm() {
 
     setIsSaving(true);
 
+    const formattedApaar = `${cleanApaar.slice(0, 4)}-${cleanApaar.slice(4, 8)}-${cleanApaar.slice(8, 12)}`;
+
     const updatedUser = updateUserProfile({
+      apaarId: formattedApaar,
       name: formData.name,
       dob: formData.dob,
       gender: formData.gender,
@@ -211,7 +245,7 @@ export default function StudentDetailsForm() {
     // Also sync student into target college roster directly
     if (formData.aisheCode) {
       syncStudentToCollegeRoster({
-        apaarId: user?.apaarId || updatedUser?.apaarId || '9842-1083-4912',
+        apaarId: formattedApaar,
         name: formData.name,
         rollNo: formData.rollNo,
         aisheCode: formData.aisheCode,
@@ -280,7 +314,7 @@ export default function StudentDetailsForm() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Full Legal Name <span className="text-rose-500">*</span>
               </label>
@@ -293,6 +327,35 @@ export default function StudentDetailsForm() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                12-Digit APAAR ID / Number <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="apaarId"
+                value={formData.apaarId}
+                onChange={handleChange}
+                placeholder="9842-1083-4912"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold focus:ring-2 focus:ring-emerald-500/20 ${
+                  (formData.apaarId || '').replace(/[^0-9]/g, '').length === 12
+                    ? 'border-emerald-300 text-emerald-900 bg-emerald-50/40 focus:border-emerald-500'
+                    : 'border-rose-200 text-rose-900 bg-rose-50/20 focus:border-rose-500'
+                }`}
+                required
+              />
+              <div className="flex items-center justify-between text-[10px] mt-1 text-slate-500">
+                <span>Must be exactly 12 digits</span>
+                <span className={`font-mono font-bold ${
+                  (formData.apaarId || '').replace(/[^0-9]/g, '').length === 12
+                    ? 'text-emerald-600'
+                    : 'text-rose-600'
+                }`}>
+                  {(formData.apaarId || '').replace(/[^0-9]/g, '').length} / 12 digits {(formData.apaarId || '').replace(/[^0-9]/g, '').length === 12 ? '✓' : '✗'}
+                </span>
+              </div>
             </div>
 
             <div>
@@ -761,6 +824,81 @@ export default function StudentDetailsForm() {
           </button>
         </div>
       </form>
+
+      {/* APAAR Invalid Length Alert Popup Modal */}
+      {apaarInvalidModal?.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border-2 border-rose-300 p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+                <AlertTriangle className="w-7 h-7 text-rose-600" />
+              </div>
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase tracking-wide">
+                  Submission Blocked
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Invalid APAAR Number Length
+                </h3>
+                <p className="text-xs text-slate-500">
+                  An APAAR ID must consist of <strong>exactly 12 numeric digits</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Entered APAAR:</span>
+                <span className="font-mono text-xs font-bold text-rose-700 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                  {apaarInvalidModal.enteredValue || '(empty)'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Detected Numeric Digits:</span>
+                <span className="font-mono text-xs font-extrabold text-rose-800 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                  {apaarInvalidModal.digitCount} / 12 digits
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-rose-200/80 flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Validation Status:</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-200 text-rose-900">
+                  {apaarInvalidModal.reason === 'LESS_THAN_12'
+                    ? `Too Short (${12 - apaarInvalidModal.digitCount} digits missing)`
+                    : `Too Long (${apaarInvalidModal.digitCount - 12} digits excess)`}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Under Ministry of Education regulations, APAAR (Automated Permanent Academic Account Registry) numbers must have exactly 12 numeric digits. You are <strong>not allowed to save student details</strong> until this is corrected.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, apaarId: '9842-1083-4912' }));
+                  setApaarInvalidModal(null);
+                  toast.success('Restored 12-digit format: 9842-1083-4912');
+                }}
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Use Standard 12-Digit Demo ID</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setApaarInvalidModal(null)}
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer"
+              >
+                Fix APAAR Number
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

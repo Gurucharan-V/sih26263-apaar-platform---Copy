@@ -43,6 +43,14 @@ export default function StudentQueries() {
   const [priority, setPriority] = useState<StudentQuery['priority']>('MEDIUM');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Modal alert when APAAR number length is less or more than 12 digits
+  const [apaarInvalidModal, setApaarInvalidModal] = useState<{
+    isOpen: boolean;
+    enteredValue: string;
+    digitCount: number;
+    reason: 'LESS_THAN_12' | 'MORE_THAN_12';
+  } | null>(null);
+
   // Keep target college in sync with profile updates
   useEffect(() => {
     if (user?.aisheCode) {
@@ -125,6 +133,22 @@ export default function StudentQueries() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Strict 12-Digit APAAR Number Validation
+    const cleanApaar = (apaarId || '').replace(/[^0-9]/g, '');
+    if (cleanApaar.length < 12 || cleanApaar.length > 12) {
+      setApaarInvalidModal({
+        isOpen: true,
+        enteredValue: apaarId || '',
+        digitCount: cleanApaar.length,
+        reason: cleanApaar.length < 12 ? 'LESS_THAN_12' : 'MORE_THAN_12'
+      });
+      toast.error(`Invalid APAAR Number: Must contain exactly 12 numeric digits (found ${cleanApaar.length}). Query filing not allowed.`, {
+        id: 'apaar-query-invalid-length'
+      });
+      return; // Not allowed to proceed
+    }
+
     if (!subject.trim() || !description.trim()) {
       toast.error('Please fill in both subject and description.');
       return;
@@ -571,6 +595,69 @@ export default function StudentQueries() {
           ))
         )}
       </div>
+
+      {/* APAAR Invalid Length Alert Popup Modal */}
+      {apaarInvalidModal?.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border-2 border-rose-300 p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 bg-rose-100 text-rose-700 rounded-2xl shrink-0">
+                <AlertCircle className="w-7 h-7 text-rose-600" />
+              </div>
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase tracking-wide">
+                  Query Blocked
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Invalid APAAR Number Length
+                </h3>
+                <p className="text-xs text-slate-500">
+                  An APAAR ID must consist of <strong>exactly 12 numeric digits</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Student APAAR ID:</span>
+                <span className="font-mono text-xs font-bold text-rose-700 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                  {apaarInvalidModal.enteredValue || '(empty)'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Detected Numeric Digits:</span>
+                <span className="font-mono text-xs font-extrabold text-rose-800 bg-white px-2 py-0.5 rounded-md border border-rose-200">
+                  {apaarInvalidModal.digitCount} / 12 digits
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-rose-200/80 flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Validation Status:</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-200 text-rose-900">
+                  {apaarInvalidModal.reason === 'LESS_THAN_12'
+                    ? `Too Short (${12 - apaarInvalidModal.digitCount} digits missing)`
+                    : `Too Long (${apaarInvalidModal.digitCount - 12} digits excess)`}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Official grievances and registry dispute tickets cannot be submitted without a valid 12-digit APAAR ID. Please ensure your student details profile is updated with a valid 12-digit number.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setApaarInvalidModal(null)}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Dismiss & Correct APAAR Profile</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

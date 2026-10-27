@@ -138,13 +138,16 @@ export function useAuth() {
 
     if (portalRole === 'student' || emailOrId.includes('student') || /^\d{4}/.test(emailOrId)) {
       const cleanInputDigits = emailOrId.replace(/[^0-9]/g, '');
-      const assignedApaar = cleanInputDigits.length === 12
-        ? `${cleanInputDigits.slice(0, 4)}-${cleanInputDigits.slice(4, 8)}-${cleanInputDigits.slice(8, 12)}`
-        : (cleanInputDigits.length >= 4 
-            ? `${cleanInputDigits.padEnd(12, '0').slice(0, 4)}-${cleanInputDigits.padEnd(12, '0').slice(4, 8)}-${cleanInputDigits.padEnd(12, '0').slice(8, 12)}`
-            : (emailOrId.includes('-') && emailOrId.length >= 10 ? emailOrId : '9842-1083-4912'));
 
-      const cleanKey = assignedApaar.replace(/[^0-9]/g, '');
+      // Strict 12-digit verification: if user enters an APAAR ID (contains digits or is not an email)
+      if (!emailOrId.includes('@') || cleanInputDigits.length > 0) {
+        if (cleanInputDigits.length !== 12) {
+          throw new Error(`Invalid APAAR Number: Must contain exactly 12 digits (found ${cleanInputDigits.length} digits). Authentication rejected.`);
+        }
+      }
+
+      const assignedApaar = `${cleanInputDigits.slice(0, 4)}-${cleanInputDigits.slice(4, 8)}-${cleanInputDigits.slice(8, 12)}`;
+      const cleanKey = cleanInputDigits;
 
       // Check if student profile was previously saved specifically for THIS APAAR ID
       let existingProfile: any = null;
