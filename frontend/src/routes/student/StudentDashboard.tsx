@@ -55,14 +55,22 @@ export default function StudentDashboard() {
     try {
       const cleanApaar = (user?.apaarId || '').replace(/[^0-9]/g, '');
       const saved = localStorage.getItem(`apaar_student_semesters_${cleanApaar || 'default'}`);
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (
+        Array.isArray(parsed) &&
+        parsed.some((p: any) => p.id === 'sem-1' || p.id === 'sem-2') &&
+        parsed.every((p: any) => typeof p.id === 'string' && p.id.startsWith('sem-')) &&
+        !parsed.some((p: any) => p.marksheetFilename)
+      ) {
+        return [];
+      }
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return null;
+      return [];
     }
   })();
-  const earnedCredits = userSemesters
-    ? userSemesters.reduce((acc: number, s: any) => acc + (Number(s.creditsEarned) || 0), 0)
-    : 128;
+  const earnedCredits = userSemesters.reduce((acc: number, s: any) => acc + (Number(s.creditsEarned) || 0), 0);
   const degreeCompletePercent = Math.min(100, Math.round((earnedCredits / 160) * 100));
 
   const handleCopyApaar = () => {

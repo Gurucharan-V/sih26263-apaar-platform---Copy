@@ -30,14 +30,6 @@ export interface SemesterMarkRecord {
   uploadedAt?: string;
 }
 
-const DEFAULT_SEMESTERS: SemesterMarkRecord[] = [
-  { id: 'sem-1', sem: 'Semester 1', year: '2022-23', creditsEarned: 24, totalCredits: 24, sgpa: '8.85', status: 'LOCKED & VERIFIED' },
-  { id: 'sem-2', sem: 'Semester 2', year: '2022-23', creditsEarned: 26, totalCredits: 26, sgpa: '9.04', status: 'LOCKED & VERIFIED' },
-  { id: 'sem-3', sem: 'Semester 3', year: '2023-24', creditsEarned: 25, totalCredits: 25, sgpa: '8.90', status: 'LOCKED & VERIFIED' },
-  { id: 'sem-4', sem: 'Semester 4', year: '2023-24', creditsEarned: 27, totalCredits: 27, sgpa: '8.95', status: 'LOCKED & VERIFIED' },
-  { id: 'sem-5', sem: 'Semester 5', year: '2024-25', creditsEarned: 26, totalCredits: 26, sgpa: '8.88', status: 'IN PROGRESS' }
-];
-
 export default function StudentCredits() {
   const { user } = useAuth();
   const studentApaar = user?.apaarId || '9842-1083-4912';
@@ -46,11 +38,25 @@ export default function StudentCredits() {
   const [semesters, setSemesters] = useState<SemesterMarkRecord[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-      // If student hasn't customized yet, use default sample
-      return DEFAULT_SEMESTERS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If student still has the legacy mock sample data (sem-1 to sem-5), purge it so it starts empty
+        if (
+          Array.isArray(parsed) &&
+          parsed.some((p) => p.id === 'sem-1' || p.id === 'sem-2') &&
+          parsed.every((p) => typeof p.id === 'string' && p.id.startsWith('sem-')) &&
+          !parsed.some((p) => p.marksheetFilename)
+        ) {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {}
+          return [];
+        }
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
     } catch {
-      return DEFAULT_SEMESTERS;
+      return [];
     }
   });
 
@@ -62,7 +68,7 @@ export default function StudentCredits() {
   const [formYear, setFormYear] = useState('2024-25');
   const [formCreditsEarned, setFormCreditsEarned] = useState(24);
   const [formTotalCredits, setFormTotalCredits] = useState(24);
-  const [formSgpa, setFormSgpa] = useState('8.50');
+  const [formSgpa, setFormSgpa] = useState('');
   const [formStatus, setFormStatus] = useState<SemesterMarkRecord['status']>('SELF_SUBMITTED');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -104,10 +110,17 @@ export default function StudentCredits() {
     setFormYear('2024-25');
     setFormCreditsEarned(24);
     setFormTotalCredits(24);
-    setFormSgpa('8.50');
+    setFormSgpa('');
     setFormStatus('SELF_SUBMITTED');
     setUploadedFile(null);
     setIsModalOpen(true);
+  };
+
+  const handleClearAllSemesters = () => {
+    if (window.confirm('Are you sure you want to clear all semester marks? You can re-upload them anytime.')) {
+      persistSemesters([]);
+      toast.success('All semester marks cleared.');
+    }
   };
 
   const handleEditSemester = (rec: SemesterMarkRecord) => {
@@ -258,16 +271,28 @@ export default function StudentCredits() {
               Semester-Wise Credit & Marks Record
             </span>
             <span className="ml-2 text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-              {semesters.length} Entries
+              {semesters.length} {semesters.length === 1 ? 'Entry' : 'Entries'}
             </span>
           </div>
-          <button
-            onClick={handleOpenAddModal}
-            className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 cursor-pointer"
-          >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>+ Add / Upload Another Semester</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {semesters.length > 0 && (
+              <button
+                onClick={handleClearAllSemesters}
+                className="text-xs font-semibold text-rose-600 hover:text-rose-800 transition cursor-pointer flex items-center gap-1"
+                title="Clear all records"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear All</span>
+              </button>
+            )}
+            <button
+              onClick={handleOpenAddModal}
+              className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 cursor-pointer"
+            >
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>+ Add / Upload Semester Marks</span>
+            </button>
+          </div>
         </div>
 
         {semesters.length === 0 ? (
