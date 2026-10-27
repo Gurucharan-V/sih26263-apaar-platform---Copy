@@ -27,19 +27,19 @@ export interface StudentQuery {
 const DEFAULT_QUERIES: StudentQuery[] = [
   {
     id: 'QRY-2024-8901',
-    studentName: 'Rohan Sundaram',
-    apaarId: '9842-1083-4912',
+    studentName: 'Archived Demo Student',
+    apaarId: '9840-0000-0001',
     institution: 'Easwari Engineering College (EEC)',
     aisheCode: 'C-18491',
-    studentEmail: 'rohan.sundaram@institute.ac.in',
-    studentPhone: '+91 98765 43210',
-    rollNo: '2024CS014',
-    dob: '2003-10-06',
+    studentEmail: 'archived.student@institute.ac.in',
+    studentPhone: '+91 98765 00001',
+    rollNo: '2022CS099',
+    dob: '2002-05-12',
     gender: 'Male',
     department: 'Computer Science and Engineering',
     category: 'APAAR_MISMATCH',
     subject: 'Middle name initial missing in APAAR digital credential',
-    description: 'My 10th marksheet has "Rohan S. Sundaram" but the APAAR card generated displays "Rohan Sundaram". Requesting correction to align with Digilocker.',
+    description: 'My 10th marksheet has "Archived S. Demo" but the APAAR card generated displays "Archived Demo Student". Requesting correction to align with Digilocker.',
     priority: 'MEDIUM',
     status: 'IN_PROGRESS',
     createdAt: '2024-10-24 14:30',
@@ -97,50 +97,23 @@ export function useQueries() {
   const loadSaved = useCallback((): StudentQuery[] => {
     try {
       const saved = localStorage.getItem('apaar_queries');
-      let parsed: StudentQuery[] = saved ? JSON.parse(saved) : DEFAULT_QUERIES;
-
-      // Sync active student's full profile details if logged in
-      try {
-        const authData = localStorage.getItem('apaar_auth');
-        if (authData) {
-          const authUser = JSON.parse(authData);
-          if (authUser?.name && authUser.role === 'STUDENT') {
-            const cleanUserApaar = String(authUser.apaarId || '').replace(/[^0-9]/g, '');
-            parsed = parsed.map((q: StudentQuery) => {
-              const cleanQApaar = String(q.apaarId || '').replace(/[^0-9]/g, '');
-              if (cleanQApaar === cleanUserApaar || q.id === 'QRY-2024-8901') {
-                const prevName = q.studentName || 'Rohan Sundaram';
-                let updatedDesc = q.description;
-                if (authUser.name && prevName && prevName !== authUser.name) {
-                  updatedDesc = updatedDesc.split(prevName).join(authUser.name);
-                }
-                if (authUser.name && updatedDesc.includes('Rohan Sundaram')) {
-                  updatedDesc = updatedDesc.split('Rohan Sundaram').join(authUser.name);
-                }
-                return {
-                  ...q,
-                  studentName: authUser.name || q.studentName,
-                  institution: authUser.institutionName
-                    ? `${authUser.institutionName} (${authUser.aisheCode || q.aisheCode || 'C-18491'})`
-                    : q.institution,
-                  aisheCode: authUser.aisheCode || q.aisheCode,
-                  studentEmail: authUser.email || q.studentEmail,
-                  studentPhone: authUser.phone || q.studentPhone,
-                  rollNo: authUser.rollNo || q.rollNo,
-                  dob: authUser.dob || q.dob,
-                  gender: authUser.gender || q.gender,
-                  department: authUser.department || q.department,
-                  fatherName: authUser.fatherName || q.fatherName,
-                  description: updatedDesc
-                };
-              }
-              return q;
-            });
+      if (saved) {
+        let parsed: StudentQuery[] = JSON.parse(saved);
+        // Ensure QRY-2024-8901 is decoupled from active student
+        parsed = parsed.map((q) => {
+          if (q.id === 'QRY-2024-8901') {
+            return {
+              ...q,
+              studentName: 'Archived Demo Student',
+              apaarId: '9840-0000-0001',
+              studentEmail: 'archived.student@institute.ac.in'
+            };
           }
-        }
-      } catch {}
-
-      return parsed;
+          return q;
+        });
+        return parsed;
+      }
+      return DEFAULT_QUERIES;
     } catch {
       return DEFAULT_QUERIES;
     }

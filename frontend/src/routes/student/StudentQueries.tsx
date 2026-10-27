@@ -50,7 +50,8 @@ export default function StudentQueries() {
     }
   }, [user?.aisheCode]);
 
-  const studentName = user?.name || 'Rohan Sundaram';
+  const hasCompletedDetails = Boolean(user?.detailsCompleted && user?.name?.trim());
+  const studentName = user?.name || '';
   const apaarId = user?.apaarId || '9842-1083-4912';
 
   // Current selected college info
@@ -61,40 +62,40 @@ export default function StudentQueries() {
 
   // Dynamic template generator based on latest student profile information
   const getAutoFillContent = (cat: StudentQuery['category']) => {
-    const sName = user?.name || studentName;
-    const sRoll = user?.rollNo || '2024CS014';
-    const sCollege = collegeInfo.name || user?.institutionName || 'Easwari Engineering College';
-    const sDob = user?.dob || '2003-10-06';
-    const sEmail = user?.email || 'rohan.sundaram@institute.ac.in';
-    const sPhone = user?.phone || '+91 98765 43210';
-    const sDept = user?.department || 'Computer Science and Engineering';
+    const sName = user?.name || '';
+    const sRoll = user?.rollNo || '';
+    const sCollege = user?.institutionName || collegeInfo.name || '';
+    const sDob = user?.dob || '';
+    const sEmail = user?.email || '';
+    const sPhone = user?.phone || '';
+    const sDept = user?.department || '';
 
     switch (cat) {
       case 'NAME_CORRECTION':
         return {
-          subject: `Correction of Legal Name / DOB - ${sName}`,
-          description: `Requesting correction in registry records to match my official government identity. Full Legal Name: "${sName}", Date of Birth: ${sDob}, Gender: ${user?.gender || 'Male'}, Father's Name: ${user?.fatherName || ''}. Student APAAR ID: ${apaarId}, Roll No: ${sRoll}. Enrolled in ${sDept} at ${sCollege}. Please synchronize with my DigiLocker & college admission roster.`
+          subject: sName ? `Correction of Legal Name / DOB - ${sName}` : 'Correction of Legal Name / DOB',
+          description: `Requesting correction in registry records to match my official government identity.${sName ? ` Full Legal Name: "${sName}",` : ''}${sDob ? ` Date of Birth: ${sDob},` : ''}${user?.gender ? ` Gender: ${user.gender},` : ''} Student APAAR ID: ${apaarId}.${sRoll ? ` Roll No: ${sRoll}.` : ''}${sDept ? ` Department: ${sDept}.` : ''}${sCollege ? ` College: ${sCollege}.` : ''} Please synchronize with my DigiLocker & admission roster.`
         };
       case 'CREDIT_TRANSFER':
         return {
-          subject: `Academic Bank of Credits (ABC) Discrepancy - ${sName}`,
-          description: `Discrepancy observed in Academic Bank of Credits (ABC ID: ${user?.abcId || 'ABC-984210834'}). Student: ${sName} (Roll No: ${sRoll}, APAAR ID: ${apaarId}) enrolled in ${sDept} at ${sCollege}. Completed course credits are not yet reflected in the national ABC depository.`
+          subject: sName ? `Academic Bank of Credits (ABC) Discrepancy - ${sName}` : 'Academic Bank of Credits (ABC) Discrepancy',
+          description: `Discrepancy observed in Academic Bank of Credits (ABC ID: ${user?.abcId || 'ABC Depository'}). Student: ${sName || 'Enrolled Student'}${sRoll ? ` (Roll No: ${sRoll})` : ''}, APAAR ID: ${apaarId}.${sCollege ? ` Institution: ${sCollege}.` : ''} Completed semester credits are not yet reflected in the national ABC depository.`
         };
       case 'INTAKE_DISCREPANCY':
         return {
-          subject: `Admission & Sanctioned Quota Status - ${sName}`,
-          description: `Verification requested for student ${sName} (Roll No: ${sRoll}, Admission Year: ${user?.admissionYear || '2024'}) in ${sDept} at ${sCollege}. Please verify my enrollment record against the approved AICTE sanctioned intake batch.`
+          subject: sName ? `Admission & Sanctioned Quota Status - ${sName}` : 'Admission & Sanctioned Quota Status',
+          description: `Verification requested for student ${sName || 'Enrolled Student'}${sRoll ? ` (Roll No: ${sRoll})` : ''}${sCollege ? ` at ${sCollege}` : ''}. Please verify my enrollment record against the approved AICTE sanctioned intake batch.`
         };
       case 'DIGILOCKER_SYNC':
         return {
-          subject: `DigiLocker Document Sync Assistance - ${sName}`,
-          description: `Encountered sync error linking APAAR ID ${apaarId} to DigiLocker for ${sName}. Registered Mobile: ${sPhone}, Email: ${sEmail}, Aadhaar: ${user?.aadhaarMasked || 'XXXX-XXXX-4912'}. Please refresh the national gateway verification token.`
+          subject: sName ? `DigiLocker Document Sync Assistance - ${sName}` : 'DigiLocker Document Sync Assistance',
+          description: `Encountered sync error linking APAAR ID ${apaarId} to DigiLocker for ${sName || 'Enrolled Student'}.${sPhone ? ` Registered Mobile: ${sPhone},` : ''}${sEmail ? ` Email: ${sEmail}.` : ''} Please refresh the national gateway verification token.`
         };
       case 'APAAR_MISMATCH':
       default:
         return {
-          subject: `APAAR ID Record Verification - ${sName}`,
-          description: `I am ${sName} (Roll No: ${sRoll}, APAAR ID: ${apaarId}), Date of Birth: ${sDob}, Gender: ${user?.gender || 'Male'}. Currently enrolled at ${sCollege} in ${sDept}. Registered email: ${sEmail}, Mobile: ${sPhone}. Requesting verification and correction of my APAAR credentials in the academic registry.`
+          subject: sName ? `APAAR ID Record Verification - ${sName}` : 'APAAR ID Record Verification',
+          description: `Requesting verification and correction of my APAAR credentials (${apaarId}) in the academic registry.${sName ? ` Student Name: ${sName}.` : ''}${sCollege ? ` Enrolled College: ${sCollege}.` : ''}`
         };
     }
   };
@@ -108,14 +109,18 @@ export default function StudentQueries() {
     setIsFormOpen(true);
   };
 
-  // Filter queries for this student
-  const cleanApaar = apaarId.replace(/[^0-9]/g, '');
+  // Filter queries for this student:
+  // A student should ONLY see queries they actually created/submitted themselves!
+  // Static demo samples (QRY-2024-8901 through QRY-2024-8904) must never be attributed to students.
+  const cleanApaar = (apaarId || '').replace(/[^0-9]/g, '');
   const myQueries = queries.filter((q) => {
-    const qApaarClean = q.apaarId.replace(/[^0-9]/g, '');
-    return (
-      (cleanApaar && qApaarClean === cleanApaar) ||
-      q.studentName.toLowerCase() === studentName.toLowerCase()
-    );
+    if (['QRY-2024-8901', 'QRY-2024-8902', 'QRY-2024-8903', 'QRY-2024-8904'].includes(q.id)) {
+      return false;
+    }
+    const qApaarClean = (q.apaarId || '').replace(/[^0-9]/g, '');
+    const matchesApaar = Boolean(cleanApaar && qApaarClean && qApaarClean === cleanApaar);
+    const matchesName = Boolean(user?.name && q.studentName && q.studentName.trim().toLowerCase() === user.name.trim().toLowerCase());
+    return matchesApaar || matchesName;
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -211,15 +216,15 @@ export default function StudentQueries() {
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                <CheckCircle2 className="w-4 h-4" />
+              <span className={`p-1.5 rounded-lg ${hasCompletedDetails ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
+                {hasCompletedDetails ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               </span>
-              <span className="text-xs font-bold text-emerald-300 tracking-wide uppercase">
-                Verified Student Identity & Pre-filled Data
+              <span className={`text-xs font-bold tracking-wide uppercase ${hasCompletedDetails ? 'text-emerald-300' : 'text-amber-300'}`}>
+                {hasCompletedDetails ? 'Verified Student Identity & Linked Data' : 'Profile Incomplete • Details Not Filled Yet'}
               </span>
               <span className="text-[11px] text-purple-200/80 bg-purple-500/20 px-2.5 py-0.5 rounded-full border border-purple-400/30 flex items-center gap-1 font-semibold">
                 <Sparkles className="w-3 h-3 text-purple-300" />
-                Live-Synced from "Fill / Edit Details"
+                {hasCompletedDetails ? 'Live-Synced from "Fill / Edit Details"' : 'Fill your details to synchronize'}
               </span>
             </div>
 
@@ -228,7 +233,7 @@ export default function StudentQueries() {
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs border border-white/20 transition cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-purple-300" />
-              <span>Edit Details in Profile</span>
+              <span>{hasCompletedDetails ? 'Edit Details in Profile' : 'Fill Details in Profile →'}</span>
             </button>
           </div>
 
@@ -238,8 +243,12 @@ export default function StudentQueries() {
                 <User className="w-3.5 h-3.5 text-purple-300" />
                 <span>Full Legal Name</span>
               </div>
-              <div className="text-sm font-extrabold text-white truncate">{user?.name || studentName}</div>
-              <div className="text-[11px] text-purple-300 font-mono">APAAR: {apaarId}</div>
+              <div className="text-sm font-extrabold text-white truncate">
+                {user?.name ? user.name : <span className="text-slate-400 font-normal italic">Not Filled Yet</span>}
+              </div>
+              <div className="text-[11px] text-purple-300 font-mono">
+                APAAR: {apaarId}
+              </div>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xs space-y-1">
@@ -247,8 +256,12 @@ export default function StudentQueries() {
                 <Building2 className="w-3.5 h-3.5 text-purple-300" />
                 <span>Enrolled Institution</span>
               </div>
-              <div className="text-sm font-extrabold text-white truncate">{user?.institutionName || collegeInfo.name}</div>
-              <div className="text-[11px] text-purple-300 font-mono">AISHE: {user?.aisheCode || selectedAishe}</div>
+              <div className="text-sm font-extrabold text-white truncate">
+                {user?.institutionName ? user.institutionName : <span className="text-slate-400 font-normal italic">Not Selected</span>}
+              </div>
+              <div className="text-[11px] text-purple-300 font-mono">
+                AISHE: {user?.aisheCode || selectedAishe}
+              </div>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xs space-y-1">
@@ -256,8 +269,12 @@ export default function StudentQueries() {
                 <GraduationCap className="w-3.5 h-3.5 text-purple-300" />
                 <span>Roll No & Department</span>
               </div>
-              <div className="text-sm font-extrabold text-white truncate">{user?.rollNo || '2024CS014'}</div>
-              <div className="text-[11px] text-purple-300 truncate">{user?.department || 'Computer Science & Engineering'}</div>
+              <div className="text-sm font-extrabold text-white truncate">
+                {user?.rollNo ? user.rollNo : <span className="text-slate-400 font-normal italic">Pending Input</span>}
+              </div>
+              <div className="text-[11px] text-purple-300 truncate">
+                {user?.department ? user.department : <span className="text-slate-400 font-normal italic">Pending Department</span>}
+              </div>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 backdrop-blur-xs space-y-1">
@@ -265,8 +282,12 @@ export default function StudentQueries() {
                 <Mail className="w-3.5 h-3.5 text-purple-300" />
                 <span>Contact & DOB</span>
               </div>
-              <div className="text-xs font-bold text-white truncate">{user?.email || 'student@institute.ac.in'}</div>
-              <div className="text-[11px] text-purple-300">{user?.phone || '+91 98765 43210'} • DOB: {user?.dob || '2003-10-06'}</div>
+              <div className="text-xs font-bold text-white truncate">
+                {user?.email ? user.email : <span className="text-slate-400 font-normal italic">No Email Linked</span>}
+              </div>
+              <div className="text-[11px] text-purple-300 truncate">
+                {user?.phone ? `${user.phone} • ` : ''}{user?.dob ? `DOB: ${user.dob}` : 'DOB: Pending'}
+              </div>
             </div>
           </div>
         </div>
@@ -446,12 +467,23 @@ export default function StudentQueries() {
       {/* Queries List */}
       <div className="space-y-3">
         {myQueries.length === 0 ? (
-          <div className="p-8 bg-white rounded-3xl border border-slate-200 text-center space-y-2">
-            <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-            <h3 className="font-bold text-slate-800 text-sm">No Active Grievance Queries</h3>
-            <p className="text-xs text-slate-500">
-              Your APAAR ID and academic records are in verified standing. If you notice any discrepancy, click "Raise New Query".
+          <div className="p-12 bg-white rounded-3xl border border-slate-200 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
+              <HelpCircle className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base">No Grievances or Queries Raised</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              {!hasCompletedDetails
+                ? 'You haven\'t completed your details or raised any queries yet. You can complete your profile in "Fill / Edit Details" or click "Raise New Query" below if you have an inquiry for your college nodal officer.'
+                : 'You have not submitted any grievance queries. If you notice any discrepancy in your APAAR ID, academic records, or semester marks, click "Raise New Query" above.'}
             </p>
+            <button
+              onClick={handleOpenModal}
+              className="mt-2 px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Raise New Query</span>
+            </button>
           </div>
         ) : (
           myQueries.map((q) => (
