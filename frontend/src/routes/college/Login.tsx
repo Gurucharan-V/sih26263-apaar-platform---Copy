@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   HelpCircle,
   FileCheck2,
@@ -254,117 +255,273 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
     }
   };
 
+  const isSelectionView =
+    !defaultPortal &&
+    (location.pathname === '/login' || location.pathname === '/login/' || location.pathname === '/');
+
+  if (isSelectionView) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-purple-200 selection:text-slate-900">
+        <Navbar portal="student" />
+
+        <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex flex-col justify-center">
+          {/* Top National Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-3.5 mb-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-xs">
+              <Landmark className="w-4 h-4 text-purple-700" />
+              <span>Ministry of Education • Government of India</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              One Nation, One Student ID Platform
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              Automated Permanent Academic Account Registry (APAAR) Unified Gateway. Please choose your identity below to access your dedicated, secure portal.
+            </p>
+          </div>
+
+          {/* Three Dedicated Options Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
+            {/* 1. Student Portal Option */}
+            <div className="bg-white rounded-3xl border-2 border-emerald-200/90 shadow-sm hover:shadow-xl hover:border-emerald-500 transition-all duration-200 p-6 sm:p-7 flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md">
+                    <GraduationCap className="w-7 h-7" />
+                  </div>
+                  <span className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Are you a Student?
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 group-hover:text-emerald-700 transition">
+                    Student Portal
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                    For enrolled college and university students
+                  </p>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  View and download your official 12-digit APAAR ID digital card, upload and manage your semester marks in the Academic Bank of Credits (ABC), and track institutional queries.
+                </p>
+
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <div className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Included Capabilities:</div>
+                  <ul className="text-xs text-slate-600 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Digital APAAR Card with QR verification</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Upload semester marksheets & dynamic CGPA</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Direct student grievance filing & resolution</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-slate-100 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => navigate('/login/student')}
+                  className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
+                >
+                  <span>Student Login</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <div className="text-[11px] text-center text-slate-400">
+                  Demo APAAR ID: 9842-1083-4912
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Institute / College Portal Option */}
+            <div className="bg-white rounded-3xl border-2 border-blue-200/90 shadow-sm hover:shadow-xl hover:border-blue-500 transition-all duration-200 p-6 sm:p-7 flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                    <Building2 className="w-7 h-7" />
+                  </div>
+                  <span className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                    Institute Login
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 group-hover:text-blue-700 transition">
+                    College Portal
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                    For higher education institutions & AISHE nodal officers
+                  </p>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Bulk ingest verified student rosters, manage institutional AISHE code authentication, verify student profiles against intake quotas, and resolve student disputes.
+                </p>
+
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <div className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Included Capabilities:</div>
+                  <ul className="text-xs text-slate-600 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>Dedicated institutional email & AISHE code</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>Bulk CSV / Excel student roster ingestion</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>Institutional student verification database</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-slate-100 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => navigate('/login/college')}
+                  className="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
+                >
+                  <span>Institute Login</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <div className="text-[11px] text-center text-slate-400">
+                  Select your accredited college code
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Moderator Portal Option */}
+            <div className="bg-white rounded-3xl border-2 border-purple-200/90 shadow-sm hover:shadow-xl hover:border-purple-500 transition-all duration-200 p-6 sm:p-7 flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-700 to-slate-800 text-white flex items-center justify-center shadow-md">
+                    <ShieldCheck className="w-7 h-7" />
+                  </div>
+                  <span className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-purple-50 text-purple-800 border border-purple-200">
+                    Moderate Login
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 group-hover:text-purple-700 transition">
+                    Moderator Portal
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                    For Ministry of Education & national moderation cell
+                  </p>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Central administrative command center for monitoring multi-college intake discrepancies, auditing duplicate APAAR IDs, and resolving escalated student grievance tickets.
+                </p>
+
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <div className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Included Capabilities:</div>
+                  <ul className="text-xs text-slate-600 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                      <span>Central Query & Dispute Resolution Center</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                      <span>Cross-college anomaly detection & audits</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                      <span>Master National APAAR Registry Lookup</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-slate-100 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => navigate('/login/moderator')}
+                  className="w-full py-3 px-4 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
+                >
+                  <span>Moderate Login</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <div className="text-[11px] text-center text-slate-400">
+                  National administrative credentials
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Role Isolation Security Note */}
+          <div className="mt-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+            <Lock className="w-4 h-4 text-emerald-600" />
+            <span>Role-Isolated Security: Once signed in, your session is locked to your chosen portal and cannot be switched without signing out.</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const config = portalConfig[activePortal];
   const PortalIcon = config.icon;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-purple-200 selection:text-slate-900">
-      {/* Top Navbar with the Three-Line Style Hamburger Menu */}
+      {/* Top Navbar */}
       <Navbar portal={activePortal === 'moderator' ? 'admin' : activePortal} />
 
       {/* Main Container */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
-          {/* Left Column: Portal Overview & Dynamic Features (6 cols) */}
+          {/* Left Column: Portal Overview & Back Button (6 cols) */}
           <div className="lg:col-span-6 space-y-6">
-            {/* National AICTE & MoE Crest Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-xs">
-              <Landmark className="w-4 h-4 text-purple-700" />
-              <span>Ministry of Education • Government of India</span>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-100 text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-500" />
+                <span>Back to Portal Selection</span>
+              </button>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-xs">
+                <Landmark className="w-3.5 h-3.5 text-purple-700" />
+                <span>Ministry of Education</span>
+              </div>
             </div>
 
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                One Nation, One Student ID Platform
+                {config.title}
               </h1>
               <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
-                Automated Permanent Academic Account Registry (APAAR) verification engine. Authenticate through your dedicated portal to access certified student records, college intake validation, and grievance moderation.
+                {activePortal === 'student'
+                  ? 'Authenticate to access your verified 12-digit APAAR ID card, deposit semester marks in the Academic Bank of Credits, or update registration particulars.'
+                  : activePortal === 'college'
+                  ? 'Accredited institution access. Enter your college code and institutional nodal credentials to manage student rosters and bulk ingestion.'
+                  : 'National administrative oversight gateway for monitoring intake quotas, resolving dispute queues, and performing audit checks.'}
               </p>
             </div>
 
-            {/* THREE SEPARATE PORTAL SELECTOR CARDS */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
-                Choose Your Login Portal
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* 1. Student Portal Option */}
-                <button
-                  type="button"
-                  onClick={() => handlePortalChange('student')}
-                  className={`p-4 rounded-2xl border text-left transition relative cursor-pointer ${
-                    activePortal === 'student'
-                      ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-200 shadow-md'
-                      : 'bg-white hover:bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 font-bold">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <div className="font-bold text-sm text-slate-900">Student</div>
-                  <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    Sign in & fill details
-                  </div>
-                  {activePortal === 'student' && (
-                    <span className="absolute top-3 right-3 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
-                    </span>
-                  )}
-                </button>
-
-                {/* 2. College Portal Option */}
-                <button
-                  type="button"
-                  onClick={() => handlePortalChange('college')}
-                  className={`p-4 rounded-2xl border text-left transition relative cursor-pointer ${
-                    activePortal === 'college'
-                      ? 'bg-blue-50/90 border-blue-400 ring-2 ring-blue-200 shadow-md'
-                      : 'bg-white hover:bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-2 font-bold">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div className="font-bold text-sm text-slate-900">College</div>
-                  <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    Unique college code
-                  </div>
-                  {activePortal === 'college' && (
-                    <span className="absolute top-3 right-3 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                    </span>
-                  )}
-                </button>
-
-                {/* 3. Moderator Portal Option */}
-                <button
-                  type="button"
-                  onClick={() => handlePortalChange('moderator')}
-                  className={`p-4 rounded-2xl border text-left transition relative cursor-pointer ${
-                    activePortal === 'moderator'
-                      ? 'bg-purple-50/90 border-purple-400 ring-2 ring-purple-200 shadow-md'
-                      : 'bg-white hover:bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-2 font-bold">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div className="font-bold text-sm text-slate-900">Moderator</div>
-                  <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
-                    Full control & queries
-                  </div>
-                  {activePortal === 'moderator' && (
-                    <span className="absolute top-3 right-3 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
-                    </span>
-                  )}
-                </button>
+            {/* Role Lockdown Banner */}
+            <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-1 shadow-md border border-slate-800">
+              <div className="font-bold text-xs flex items-center gap-2 text-emerald-400">
+                <Lock className="w-3.5 h-3.5" />
+                <span>Dedicated Role-Isolated Login</span>
               </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                You are accessing the <strong>{config.title}</strong>. For security, cross-portal switching between student, college, and moderator is disabled after login.
+              </p>
             </div>
 
             {/* Portal Features Checklist */}
@@ -389,29 +546,15 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
               </ul>
             </div>
 
-            {/* One-Click Quick Demo Autofill */}
+            {/* One-Click Quick Demo Autofill (Specific to this active portal) */}
             <div className="pt-1 flex items-center gap-2">
               <span className="text-xs text-slate-500 font-medium">Quick Demo Autofill:</span>
               <button
                 type="button"
-                onClick={() => handleDemoFill('student')}
-                className="text-xs px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 font-semibold transition"
+                onClick={() => handleDemoFill(activePortal)}
+                className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-semibold transition cursor-pointer"
               >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoFill('college')}
-                className="text-xs px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 font-semibold transition"
-              >
-                College
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoFill('moderator')}
-                className="text-xs px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 font-semibold transition"
-              >
-                Moderator
+                Autofill {config.title} Credentials
               </button>
             </div>
           </div>
@@ -448,9 +591,18 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                   </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-50 text-slate-700 border-slate-200">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Secured with Verhoeff & TLS</span>
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border bg-slate-50 text-slate-700 border-slate-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Verhoeff Verified</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/login')}
+                    className="text-xs text-blue-700 hover:text-blue-900 font-semibold hover:underline cursor-pointer"
+                  >
+                    Change Role
+                  </button>
                 </div>
               </div>
 
