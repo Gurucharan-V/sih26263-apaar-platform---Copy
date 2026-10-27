@@ -1,7 +1,7 @@
-# SIH 26263 – APAAR Platform
+# Aaroh – SIH 26263 APAAR Platform
 
 > **Smart India Hackathon 2024** – Problem Statement 26263  
-> One-stop platform for APAAR ID data ingestion, validation, deduplication, and anomaly detection for educational institutions across India.
+> **Aaroh**: One-stop platform for APAAR ID data ingestion, validation, deduplication, and anomaly detection for educational institutions across India.
 
 ## 🏗️ Architecture
 

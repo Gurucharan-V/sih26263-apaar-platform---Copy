@@ -90,7 +90,7 @@ export const Sidebar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'mode
       </nav>
 
       <div className="p-3 bg-slate-800/60 rounded-xl text-xs text-slate-400 border border-slate-700/50">
-        <div className="font-semibold text-slate-200 mb-0.5">SIH Team 26263</div>
+        <div className="font-semibold text-slate-200 mb-0.5">Aaroh • SIH Team 26263</div>
         <div className="text-[11px]">Automated APAAR Verifier v1.0.0</div>
       </div>
     </aside>

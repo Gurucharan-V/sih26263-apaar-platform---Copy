@@ -128,18 +128,24 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
                 ? 'bg-gradient-to-tr from-blue-900 to-indigo-900'
                 : 'bg-gradient-to-tr from-purple-950 to-slate-900'
             }`}
-            title="National Academic Registry Portal"
+            title="Aaroh - National Academic Registry Portal"
           >
             <BadgeIcon className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span 
+              <div 
                 onClick={() => navigate(user?.role === 'STUDENT' ? '/student' : user?.role === 'COLLEGE_NODAL' ? '/college' : user?.role === 'MODERATOR' ? '/admin' : '/login')}
-                className="font-bold text-slate-900 text-sm sm:text-base tracking-tight hover:text-blue-700 cursor-pointer"
+                className="flex items-center gap-1.5 cursor-pointer group"
               >
-                APAAR Data Platform
-              </span>
+                <span className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight group-hover:text-blue-700">
+                  Aaroh
+                </span>
+                <span className="text-slate-300 font-normal hidden sm:inline">•</span>
+                <span className="font-medium text-slate-600 text-xs sm:text-sm hidden sm:inline">
+                  APAAR Platform
+                </span>
+              </div>
               <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-bold border ${portalBadge.color}`}>
                 <BadgeIcon className="w-3 h-3" />
                 <span>{portalBadge.title}</span>
@@ -283,7 +289,7 @@ export const Navbar: React.FC<{ portal: 'student' | 'college' | 'admin' | 'moder
             <div className="p-4 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <Menu className="w-5 h-5 text-blue-400" />
-                <h3 className="font-bold text-base text-white">System Menu & Profile</h3>
+                <h3 className="font-bold text-base text-white">Aaroh • System Menu</h3>
               </div>
               <button
                 onClick={() => setIsMenuDrawerOpen(false)}

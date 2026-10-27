@@ -1,7 +1,7 @@
 {
   "name": "apaar-backend",
   "version": "1.0.0",
-  "description": "SIH 26263 APAAR Verification Platform Backend",
+  "description": "Aaroh - SIH 26263 APAAR Verification Platform Backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

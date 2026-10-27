@@ -1,4 +1,4 @@
-# Demo Script – SIH 26263 APAAR Platform
+# Demo Script – Aaroh (SIH 26263 APAAR Platform)
 
 ## Pre-requisites
 

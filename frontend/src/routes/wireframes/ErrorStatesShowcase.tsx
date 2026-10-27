@@ -147,7 +147,7 @@ export default function ErrorStatesShowcase() {
               Reusable Error Screens & Validation States Simulator
             </h1>
             <p className="text-[11px] text-slate-500 font-medium">
-              Smart India Hackathon • SIH 26263 Interactive Error Handler
+              Aaroh • Smart India Hackathon SIH 26263 Interactive Error Handler
             </p>
           </div>
         </div>

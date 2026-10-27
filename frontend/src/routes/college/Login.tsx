@@ -398,9 +398,15 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                 </button>
               )}
 
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-xs">
-                <Landmark className="w-3.5 h-3.5 text-purple-700" />
-                <span>Ministry of Education</span>
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Aaroh</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold shadow-xs">
+                  <Landmark className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Ministry of Education</span>
+                </div>
               </div>
             </div>
 
@@ -923,7 +929,7 @@ export default function Login({ defaultPortal }: { defaultPortal?: PortalType })
                 Ministry of Education • Government of India
               </p>
               <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                APAAR Engine v3.2 • AICTE Smart India Hackathon
+                Aaroh Platform v3.2 • APAAR Verification Engine • SIH 26263
               </p>
             </div>
           </div>

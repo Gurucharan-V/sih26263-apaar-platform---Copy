@@ -1,6 +1,6 @@
 openapi: "3.0.3"
 info:
-  title: APAAR Platform API
+  title: Aaroh - APAAR Platform API
   version: "1.0.0"
   description: |
     REST API for the SIH 26263 APAAR data-ingestion, validation,

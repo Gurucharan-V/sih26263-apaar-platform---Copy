@@ -1,4 +1,4 @@
-# Architecture – APAAR Platform
+# Architecture – Aaroh APAAR Platform
 
 ## High-Level Overview
 

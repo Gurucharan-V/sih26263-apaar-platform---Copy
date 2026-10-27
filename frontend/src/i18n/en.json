@@ -1,6 +1,6 @@
 {
   "common": {
-    "welcome": "Welcome to APAAR Platform",
+    "welcome": "Welcome to Aaroh (APAAR Platform)",
     "submit": "Submit",
     "cancel": "Cancel",
     "status": "Status",
@@ -8,7 +8,7 @@
     "officialPortal": "Government of India Verification Gateway"
   },
   "auth": {
-    "title": "APAAR National Verification Gateway",
+    "title": "Aaroh - APAAR National Verification Gateway",
     "subtitle": "Automated Permanent Academic Account Registry • SIH 26263",
     "portalRole": "Select Access Portal",
     "collegeRole": "College Nodal Officer",
@@ -24,7 +24,7 @@
     "support": "Helpline: 1800-111-678 | support-apaar@gov.in"
   },
   "nav": {
-    "systemTitle": "APAAR System",
+    "systemTitle": "Aaroh System",
     "collegePortal": "College Portal",
     "adminPortal": "Admin Portal",
     "dashboard": "Dashboard",
